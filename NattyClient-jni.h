@@ -48,7 +48,9 @@
 
 #define ENABLE_FLATFORM_ANDROID		1
 
-#define LOG(...) __android_log_print(4, "Native" ,__VA_ARGS__)
+#define LOG(...) 		__android_log_print(4, "Native" ,__VA_ARGS__)
+
+
 
 #endif
 

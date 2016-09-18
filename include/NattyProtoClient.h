@@ -46,25 +46,45 @@
 #define __NATTY_PROTO_CLIENT_H__
 
 
-#include "NattyNetwork.h"
-
-
 typedef enum {
 	STATUS_TIMEOUT = 0x0,
 	STATUS_NOEXIST,
 } StatusSendResult;
 
+typedef unsigned char U8;
+typedef unsigned short U16;
+typedef unsigned int U32;
+typedef unsigned long long DEVID;
 
-int ntySendDataPacket(C_DEVID toId, U8 *data, int length);
+typedef void (*PROXY_CALLBACK_CLINET)(int len);
+typedef void (*PROXY_HANDLE_CLIENT)(DEVID id, int len);
+
+#define CLIENT_BUFFER_SIZE		1024
+
+
+int ntySendDataPacket(DEVID toId, U8 *data, int length);
 int ntySendMassDataPacket(U8 *data, int length);
-void ntySetSendSuccessCallback(PROXY_CALLBACK cb);
-void ntySetSendFailedCallback(PROXY_CALLBACK cb);
-void ntySetProxyCallback(PROXY_CALLBACK cb);
+
+int ntyStartupClient(void);
+void ntyShutdownClient(void);
+
+
+void ntySetSendSuccessCallback(PROXY_CALLBACK_CLINET cb);
+void ntySetSendFailedCallback(PROXY_CALLBACK_CLINET cb);
+void ntySetProxyCallback(PROXY_HANDLE_CLIENT cb);
 U8* ntyGetRecvBuffer(void);
-void ntySetDevId(C_DEVID id);
+void ntySetDevId(DEVID id);
 int ntyGetRecvBufferSize(void);
+void ntyReleaseNetwork(void);
+int ntyGetNetworkStatus(void);
+void ntySetBindResult(PROXY_CALLBACK_CLINET cb);
+void ntySetUnBindResult(PROXY_CALLBACK_CLINET cb);
 
+void ntyBindClient(DEVID did);
+void ntyUnBindClient(DEVID did);
 
+DEVID* ntyGetFriendsList(int *Count);
+void ntyReleaseFriendsList(DEVID **list);
 
 #endif
 

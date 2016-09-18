@@ -41,46 +41,40 @@
  *
  */
 
+#ifndef __NATTY_TCP_SERVER_H__
+#define __NATTY_TCP_SERVER_H__
 
-package com.wbj.ndk.natty.client;
 
-import android.util.Log;
 
-public class NattyClient {
-	static {
-		System.loadLibrary("natty-client");
-	}
-	public native String stringFromJNI();
-	public native int add(int a, int b);
-	
-//	public native void nativeInitilize();
-//	public native void nativeThreadStop();
-//	public native void nativeThreadStart();
-	
+#include "NattyUdpServer.h"
 
-	public native byte[] getNativeBuffer();
-	public native int getBufferSize();
-	
-	public native void ntyClientInitilize();
-	public native void setNattyDevId(byte[] DevId);
-	
-	public void onNativeCallback(int count)  {
-		Log.i("Native", " aaa onNativeCallback count = " + count);
-	}
-	
-	public void onNativeUserRecvCallback(int len) {
-		byte[] buffer = getNativeBuffer();
-		
-		for (int i = 0;i < len;i ++) {
-			Log.i("Native", " aaa buffer["+i+"] : " + buffer[i]);
-		}
-	}
-	
-	public void onNativeSendSuccess(int arg) {
-		
-	}
-	
-	public void onNativeSendFailed(int arg) {
-		
-	}
-}
+#define NATTY_TCP_SERVER_PORT			NATTY_UDP_SERVER_PORT
+#define NATTY_CONNECTION_BACKLOG 		8
+#define NATTY_SOCKET_READ_TIMEOUT		10
+#define NATTY_SOCKET_WRITE_TIMEOUT		10
+
+typedef Client TcpClient;
+typedef Server TcpServer;
+typedef ServerHandle TcpServerHandle; 
+#if 0
+typedef struct _TcpClient {
+	int fd;
+	struct event_base *evbase;
+	struct bufferevent *buf_ev;
+	struct evbuffer *output_buffer;
+} TcpClient;
+#endif
+
+
+
+void* ntyTcpServerInstance(void);
+int ntyTcpServerRun(const void *arg);
+
+
+
+#endif
+
+
+
+
+

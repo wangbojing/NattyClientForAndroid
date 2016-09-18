@@ -60,7 +60,6 @@
 	item->prev = item->next = NULL;							\
 }
 
-
 static void *ntyRunner(void *arg) {
 	Worker *worker = (Worker*)arg;
 	Job *job = NULL;
@@ -147,6 +146,7 @@ static void* ntyThreadPoolCtor(void *_self, va_list *params) {
 
 	return pool;
 }
+
 static void* ntyThreadPoolDtor(void *_self) {
 	ThreadPool *pool = (ThreadPool*)_self;
 
@@ -164,7 +164,7 @@ static void ntyThreadPoolAddJob(void *_self, void *task) {
 	ntyWorkQueueAddJob(pool->wq, job);
 }
 
-static const ThreadPoolOpera ntyThreadPoolOpera = {
+const ThreadPoolOpera ntyThreadPoolOpera = {
 	sizeof(ThreadPool),
 	ntyThreadPoolCtor,
 	ntyThreadPoolDtor,
@@ -178,7 +178,10 @@ static void *pThreadPool = NULL;
 
 void *ntyThreadPoolInstance(void) {
 	if (pThreadPool == NULL) {
-		pThreadPool = New(pNtyThreadPoolOpera);
+		void *pPool = New(pNtyThreadPoolOpera);
+		if ((unsigned long)NULL != cmpxchg((void*)(&pThreadPool), (unsigned long)NULL, (unsigned long)pPool, WORD_WIDTH)) {
+			Delete(pPool);
+		}
 	}
 	return pThreadPool;
 }

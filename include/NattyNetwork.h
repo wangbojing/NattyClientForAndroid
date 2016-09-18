@@ -49,21 +49,24 @@
 #include "NattyTimer.h"
 #include "NattyProtocol.h"
 #include "NattyRBTree.h"
+#include "../NattyClient-jni.h"
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-
+#if 0
 typedef long long U64;
 typedef unsigned int U32;
 typedef unsigned short U16;
 typedef unsigned char U8;
 typedef long long C_DEVID;
+#endif
 
-#define SERVER_NAME		"112.93.116.188" //"127.0.0.1"
+#define SERVER_NAME		"112.93.116.189" //"127.0.0.1" 
 #define SERVER_PORT		8888
 #define RECV_BUFFER_SIZE	(1024+16)
+#define NORMAL_BUFFER_SIZE	64
 #define SENT_TIMEOUT	3
 
 
@@ -121,11 +124,13 @@ enum {
 
 #define CACHE_BUFFER_SIZE	1048
 
-#define HEARTBEAT_TIMEOUT		25
+#define HEARTBEAT_TIMEOUT		300
+#define RECONNECT_TICK_TIME		60
 #define P2P_HEARTBEAT_TIMEOUT	60
 #define P2P_HEARTBEAT_TIMEOUT_COUNTR	5
 
 typedef void (*PROXY_CALLBACK)(int len);
+typedef void (*PROXY_HANDLE_CB)(C_DEVID id, int len);
 
 
 typedef struct _NETWORK {
@@ -147,19 +152,21 @@ typedef struct _NETWORKOPERA {
 	int (*send)(void *_self, struct sockaddr_in *to, U8 *buf, int len);
 	int (*recv)(void *_self, U8 *buf, int len, struct sockaddr_in *from);
 	int (*resend)(void *_self);
+	int (*reconnect)(void *_self);
 } NetworkOpera;
 
 
 void *ntyNetworkInstance(void);
-void ntyNetworkRelease(void *self);
+void *ntyNetworkRelease(void *self);
 int ntySendFrame(void *self, struct sockaddr_in *to, U8 *buf, int len);
 int ntyRecvFrame(void *self, U8 *buf, int len, struct sockaddr_in *from);
+int ntyReconnect(void *self);
 
 
 int ntyGetSocket(void *self);
 U8 ntyGetReqType(void *self);
 C_DEVID ntyGetDestDevId(void *self);
-void ntySetDevId(C_DEVID id);
+//void ntySetDevId(C_DEVID id);
 
 
 

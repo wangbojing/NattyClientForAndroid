@@ -43,68 +43,71 @@
 
 
 
-#ifndef __NATTY_THREAD_POOL_H__ 
-#define __NATTY_THREAD_POOL_H__
+#ifndef __DAVE_MQ_H__
+#define __DAVE_MQ_H__
 
-#include <pthread.h>
 #include "NattyAbstractClass.h"
 
-#define NTY_THREAD_POOL_NUM		80
 
 
-typedef struct _Worker {
-	pthread_t thread;
-	int terminate;
-	struct _WorkQueue *workqueue;
-	struct _Worker *prev;
-	struct _Worker *next;
-} Worker;
+#define DAVE_MESSAGE_LENGTH			512
+
+#define NTY_HTTP_GET_HANDLE_STRING			"GET"
+#define NTY_HTTP_POST_HANDLE_STRING			"POST"
+#define NTY_HTTP_RET_HANDLE_STRING			"RET"
 
 
-typedef struct _Job {
-	void (*job_function)(struct _Job *job);
-	void *user_data;
-	struct _Job *prev;
-	struct _Job *next;
-} Job;
+
+typedef enum {
+	MSG_TYPE_START = 0,
+	MSG_TYPE_QJK_FALLEN = MSG_TYPE_START,
+	MSG_TYPE_GAODE_WIFI_CELL_API,
+	MSG_TYPE_MTK_QUICKLOCATION,
+	MSG_TYPE_END = MSG_TYPE_MTK_QUICKLOCATION,
+} MESSAGE_TYPE;
+
+typedef struct _MESSAGETAG {
+	MESSAGE_TYPE Type;
+	U8 Tag[DAVE_MESSAGE_LENGTH];
+	int length;
+	C_DEVID fromId;
+	C_DEVID toId;
+} MessageTag;
+
+//typedef int VALUE_TYPE;
+typedef MessageTag VALUE_TYPE;
 
 
-typedef struct _WorkQueue {
-	Worker *workers;
-	Job *waiting_jobs;
-	pthread_mutex_t jobs_mutex;
-	pthread_cond_t jobs_cond;
-} WorkQueue;
+typedef struct _DaveNode {
+	VALUE_TYPE *value;
+	struct _DaveNode *next;
+	struct _DaveNode *prev;
+} DaveNode ;
 
-typedef struct _ThreadPool {
+typedef struct _DaveQueue {
 	const void *_;
-	WorkQueue *wq;
-} ThreadPool;
+	DaveNode *head;
+	DaveNode *tail;
+	DaveNode *nil;
+} DaveQueue;
 
-typedef struct _ThreadPoolOpera {
-	size_t size;
-	void* (*ctor)(void *_self, va_list *params);
+typedef struct _DaveQueueHandle {
+	int size;
+	void* (*ctor)(void *_self);
 	void* (*dtor)(void *_self);
-	void (*addJob)(void *_self, void *task);
-} ThreadPoolOpera;
+	void (*enqueue)(void *_self, VALUE_TYPE *value);
+	void* (*dequeue)(void *_self);
+} DaveQueueHandle;
 
-void *ntyThreadPoolInstance(void);
-void ntyThreadPoolRelease(void);
-int ntyThreadPoolPush(void *self, void *task);
+void *ntyDaveMqWorkerInstance(void);
+void ntyDaveMqPushWorker(void *arg) ;
+int ntyClassifyMessageType(C_DEVID fromId, C_DEVID toId, U8 *data, int length);
+
+void ntyDaveMqStart(void);
+
 
 
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
 
 

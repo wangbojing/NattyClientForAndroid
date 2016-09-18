@@ -48,9 +48,28 @@
 #define __NTY_UTILS_H__
 
 #include "NattyLetter.h"
+#include "NattyAbstractClass.h"
+
+
+typedef struct tm TimeStamp;
 
 void ntyDisplay(void);
 
+void ntyFree(void *p);
+void *ntyMalloc(size_t size);
+
+U32 ntyKMP(const char *text,const U32 text_length, const char *pattern,const U32 pattern_length, U32 *matches) ;
+TimeStamp* ntyGetSystemTime(void);
+
+U16 ntyU8ArrayToU16(U8 *buf);
+U32 ntyU8ArrayToU32(U8 *buf);
+void ntyU8ArrayToU64(U8 *buf, C_DEVID *id);
+
+
+int ntySeparation(char ch,const char *sequence, int length, char ***pChTable, int *Count);
+void ntyFreeTable(unsigned char ***table, int count);
+
+char ntyIsAvailableNum(char *phnum);
 
 #endif
 

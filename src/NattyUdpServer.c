@@ -45,11 +45,7 @@
 
 #include "NattyFilter.h"
 #include "NattyUdpServer.h"
-#if 0 
-#include "NattyWorkQueue.h"
-#else
 #include "NattyThreadPool.h"
-#endif
 
 void error(char *msg) {  
 	perror(msg);  
@@ -88,7 +84,7 @@ void* ntyUdpServerDtor(void *_self) {
 	return self;
 }
 
-static void freeRequestPacket(void *pReq) {
+void freeRequestPacket(void *pReq) {
 	RequestPacket *req = pReq;
 
 	if (req != NULL) {
@@ -102,7 +98,7 @@ static void freeRequestPacket(void *pReq) {
 	}
 }
 
-static void* allocRequestPacket(void) {
+void* allocRequestPacket(void) {
 	RequestPacket *req = (RequestPacket*)malloc(sizeof(RequestPacket));
 	if (req == NULL) {
 		perror("malloc Request Packet failed\n");
@@ -131,10 +127,10 @@ static void* allocRequestPacket(void) {
 static void ntyUdpServerJob(Job *job) {
 	
 	RequestPacket *req = (RequestPacket*)job->user_data;
-	void* pFilter = ntyProtocolFilterInit();
-
+	void* pFilter = ntyProtocolFilterInstance();
 	ntyProtocolFilterProcess(pFilter, req->buffer, req->length, req->client);
 
+	//ntyProtocolFilterRelease(pFilter);
 	freeRequestPacket(req);
 	free(job);
 }
@@ -146,11 +142,12 @@ int ntyUdpServerProcess(const void *_self) {
 	
 	struct pollfd fds;
 	int ret = -1, n;
-	char buf[RECV_BUFFER_SIZE];
+	unsigned char buf[RECV_BUFFER_SIZE];
 	RequestPacket *req;
 
 	Job *job;
 	void* pThreadPool = ntyThreadPoolInstance();
+	void* pFilter = ntyProtocolFilterInstance();
 
 	if (self->sockfd <= 0) {
 		error("Udp Server Socket no Initial");
@@ -168,14 +165,14 @@ int ntyUdpServerProcess(const void *_self) {
 			
 			bzero(buf, RECV_BUFFER_SIZE);    
 			n = recvfrom(self->sockfd, buf, RECV_BUFFER_SIZE, 0, (struct sockaddr *) &req->client->addr, &clientlen);    
-			printf("%d.%d.%d.%d:%d, length:%d --> %x, id:%lld\n", *(unsigned char*)(&req->client->addr.sin_addr.s_addr), *((unsigned char*)(&req->client->addr.sin_addr.s_addr)+1),													
+			ntylog("%d.%d.%d.%d:%d, length:%d --> %x, id:%lld\n", *(unsigned char*)(&req->client->addr.sin_addr.s_addr), *((unsigned char*)(&req->client->addr.sin_addr.s_addr)+1),													
 				*((unsigned char*)(&req->client->addr.sin_addr.s_addr)+2), *((unsigned char*)(&req->client->addr.sin_addr.s_addr)+3),													
 				req->client->addr.sin_port, n, buf[NTY_PROTO_TYPE_IDX], *(C_DEVID*)(&buf[NTY_PROTO_DEVID_IDX]));	
 			// proccess
 			// i think process protocol and search client id from rb-tree
 			req->client->sockfd = self->sockfd;
+			req->client->clientType = PROTO_TYPE_UDP;
 			req->length = (U16)n;
-
 			req->buffer = (U8*)malloc(n);
 			if (req->buffer == NULL) {
 				perror("malloc Recv Buffer failed\n");
@@ -207,6 +204,7 @@ int ntyUdpServerProcess(const void *_self) {
 		}
 	}
 
+	ntyProtocolFilterProcess(pFilter, req->buffer, req->length, req->client);
 	//free(pClient);
 	//ntyProtocolFilterRelease(pFilter);
 	return 0;
@@ -221,6 +219,7 @@ static const UdpServerOpera ntyUdpServer = {
 };
 
 static const void *pNtyUdpServer = &ntyUdpServer;
+static void *pUdpServer = NULL;
 
 int ntyUdpServerRun(const void *arg) {
 	const UdpServerOpera * const *pServerConf = arg;
@@ -241,10 +240,23 @@ int ntyClientCompare(const UdpClient *clientA, const UdpClient *clientB) {
 }
 
 int ntySendBuffer(const UdpClient *client, unsigned char *buffer, int length) {
-	return sendto(client->sockfd, buffer, length, 0, (struct sockaddr *)&client->addr, sizeof(struct sockaddr_in));
+	if (client->clientType == PROTO_TYPE_UDP) {
+		return sendto(client->sockfd, buffer, length, 0, (struct sockaddr *)&client->addr, sizeof(struct sockaddr_in));
+	} else if (client->clientType == PROTO_TYPE_TCP) {
+		int ret = send(client->sockfd, buffer, length, 0);
+		ntydbg(" tcp send success : %d\n", ret);
+		return ret;
+	}
+	return -1;
 }
 
-const void* ntyUdpServerInstance(void) {
-	return pNtyUdpServer;
+void* ntyUdpServerInstance(void) {
+	if (pUdpServer == NULL) {
+		void *pServer = New(pNtyUdpServer);
+		if ((unsigned long)NULL != cmpxchg((void*)(&pUdpServer), (unsigned long)NULL, (unsigned long)pServer, WORD_WIDTH)) {
+			Delete(pServer);
+		}
+	}
+	return pUdpServer;
 }
 

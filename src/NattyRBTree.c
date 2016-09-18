@@ -140,8 +140,10 @@ void NattyRBTreeInsert(RBTree *T, RBTreeNode *z) {
 		y = x;
 		if (z->key < x->key) {
 			x = x->left;
-		} else {
+		} else if(z->key > x->key) {
 			x = x->right;
+		} else { //Exist
+			return ;
 		}
 	}
 
@@ -408,7 +410,7 @@ static void ntyInOrderTraversalNotify(RBTree *T, RBTreeNode *node, C_DEVID selfI
 static void ntyInOrderTraversalForList(const RBTree *T, RBTreeNode *node, C_DEVID *list) {
 	if (node != T->nil) {
 		ntyInOrderTraversalForList(T, node->left, list);
-		//printf(" %lld ", node->key);
+		//ntylog(" %lld ", node->key);
 		//handle_FN(node->key);
 		*list = node->key;
 		ntyInOrderTraversalForList(T, node->right, ++list);
@@ -417,7 +419,9 @@ static void ntyInOrderTraversalForList(const RBTree *T, RBTreeNode *node, C_DEVI
 }
 
 static void ntyInOrderMass(RBTree *T, RBTreeNode *node, HANDLE_MASS handle_FN, U8 *buf, int length) {
+	LOG("ntyInOrderMass");
 	if (node != T->nil) {
+		LOG("ntyInOrderMass not null");
 		ntyInOrderMass(T, node->left, handle_FN, buf, length);		
 		handle_FN(node->key, buf, length);
 		ntyInOrderMass(T, node->right, handle_FN, buf, length);
@@ -427,7 +431,7 @@ static void ntyInOrderMass(RBTree *T, RBTreeNode *node, HANDLE_MASS handle_FN, U
 
 static void ntyPreOrderTraversal(RBTree *T, RBTreeNode *node) {
 	if (node != T->nil) {
-		printf(" %lld ", node->key);
+		LOG(" %lld ", node->key);
 		ntyPreOrderTraversal(T, node->left);
 		ntyPreOrderTraversal(T, node->right);
 	}
@@ -448,7 +452,7 @@ static void ntyPosOrderTraversal(RBTree *T, RBTreeNode *node) {
 	if (node != T->nil) {
 		ntyPosOrderTraversal(T, node->left);
 		ntyPosOrderTraversal(T, node->right);
-		printf(" %lld ", node->key);
+		LOG(" %lld ", node->key);
 	}
 	return ;
 }
@@ -458,7 +462,7 @@ static int ntyPrintTreeByLevel(RBTree *T, RBTreeNode *node, int level) {
 		return 0;
 	}
 	if (0 == level) {
-		printf(" %lld color:%d  %s\n", node->key, node->color, (char*)node->value);
+		LOG(" %lld color:%d  %s\n", node->key, node->color, (char*)node->value);
 		return 1;
 	}
 
@@ -489,7 +493,7 @@ void ntyRBTreeOperaNotify(void *_self, C_DEVID selfId, HANDLE_NOTIFY notify_FN) 
 
 void ntyRBTreeOperaMass(void *_self, HANDLE_MASS handle_FN, U8 *buf, int length) {
 	RBTree *self = _self;
-
+	
 	return ntyInOrderMass(self, self->root, handle_FN, buf, length);
 }
 
@@ -516,6 +520,7 @@ static void *pRBTree = NULL; //Singleton
 void* ntyRBTreeInstance(void) {
 	if (pRBTree == NULL) {
 		pRBTree = New(pNtyRBTreeOpera);
+
 	}
 	return pRBTree;
 }
@@ -614,9 +619,11 @@ void ntyFriendsTreeTraversalNotify(void *self, C_DEVID selfId, HANDLE_NOTIFY not
 void ntyFriendsTreeMass(void *self, HANDLE_MASS handle_FN, U8 *buf, int length) {
 	RBTreeOpera **pRBTreeOpera = self;
 	
-	if (self && (*pRBTreeOpera) && (*pRBTreeOpera)->traversal) {
+	LOG("ntyFriendsTreeMass start");
+	if (self && (*pRBTreeOpera) && (*pRBTreeOpera)->mass) {
 		return (*pRBTreeOpera)->mass(self, handle_FN, buf, length);
 	}
+	LOG("ntyFriendsTreeMass end");
 }
 
 
@@ -705,7 +712,7 @@ int main() {
 		NattyRBTreeInsert(T, node);
 	}
 
-	printf("\n");
+	ntylog("\n");
 
 	for (i = 0;i < count;i ++) {
 		node = ntyRBTreeSearch(T, keyArray[i]);
@@ -729,23 +736,23 @@ int main() {
 	int size = ntFriendsTreeGetNodeCount(pRBTree);
 	C_DEVID *list = ntyFriendsTreeGetAllNodeList(pRBTree);
 	for (i = 0;i < size;i ++) {
-		printf("  %lld, ", (C_DEVID)(*(list+i)));
+		ntylog("  %lld, ", (C_DEVID)(*(list+i)));
 		
 	}
 	free(list);
-	printf(" addr: %x \n", list);
+	ntylog(" addr: %x \n", list);
 #endif		
 
 	void* v = ntyRBTreeInterfaceSearch(pRBTree, 19);
-	printf("\n value: %s\n", (char*)v);
+	ntylog("\n value: %s\n", (char*)v);
 
 
 	value = (char*)malloc(16);
 	strcpy(value, "nihaoma?");
-	printf(" Update: %d\n", ntyRBTreeInterfaceUpdate(pRBTree, 11, value));
+	ntylog(" Update: %d\n", ntyRBTreeInterfaceUpdate(pRBTree, 11, value));
 
 	v = ntyRBTreeInterfaceSearch(pRBTree, 11);
-	printf("\n value: %s\n", (char*)v);
+	ntylog("\n value: %s\n", (char*)v);
 
 	ntyRBTreeInterfaceDelete(pRBTree, 18);
 

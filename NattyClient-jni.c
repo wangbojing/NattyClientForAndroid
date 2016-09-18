@@ -163,10 +163,10 @@ void ntyCallJavaFunction(const char *func, int arg) {
 		LOG("Fail to find method %s", func);
 		return ;
 	}
-	LOG("javaCallback");
+	LOG("javaCallback %s", func);
 	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, arg);
 
-	(*gJavaVM)->DetachCurrentThread(gJavaVM);
+	//(*gJavaVM)->DetachCurrentThread(gJavaVM);
 	LOG("native_thread_exec loop leave");
 }
 
@@ -175,14 +175,32 @@ void ntySendSuccess(int arg) {
 	ntyCallJavaFunction("onNativeSendSuccess", arg);
 }
 
+
 void ntySendFailed(int arg) {
 	LOG("failed : %d\n", arg);
+#if 0
+	if (arg == STATUS_TIMEOUT)
+		ntyCallJavaFunction("onNativeSendTimeout", arg);
+	else if (arg == STATUS_NOEXIST)
+		ntyCallJavaFunction("onNativeSendNoExist", arg);
+#else
 	ntyCallJavaFunction("onNativeSendFailed", arg);
+#endif
 }
 
-void ntyUserRecvCb(int len) {
+void ntyUserRecvCb(DEVID id, int len) {
 	LOG("ntyUserRecvCb : %d\n", len);
 	ntyCallJavaFunction("onNativeUserRecvCallback", len);
+}
+
+void ntyDisconnect(int arg) {
+	LOG("ntyDisconnect\n");
+	ntyCallJavaFunction("onNativeDisconnect", arg);
+}
+
+void ntyReconnected(int arg) {
+	LOG("ntyReconnected\n");
+	ntyCallJavaFunction("onNativeReconnect", arg);
 }
 
 int Java_com_wbj_ndk_natty_client_NattyClient_getBufferSize(JNIEnv *env, jobject thiz) {
@@ -205,7 +223,7 @@ jbyteArray Java_com_wbj_ndk_natty_client_NattyClient_getNativeBuffer(JNIEnv *env
 void Java_com_wbj_ndk_natty_client_NattyClient_setNattyDevId(JNIEnv *env, jobject thiz, jbyteArray DevIdArray) {
 	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
 
-	C_DEVID AppId = *(C_DEVID*)data;
+	DEVID AppId = *(DEVID*)data;
 	ntySetDevId(AppId);
 
 	LOG(" setNattyDevId : %lld ", AppId);
@@ -220,9 +238,28 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyClientInitilize(JNIEnv *env, j
 	ntySetProxyCallback(ntyUserRecvCb);
 	ntySetSendFailedCallback(ntySendFailed);
 	ntySetSendSuccessCallback(ntySendSuccess);
+	ntySetProxyReconnect(ntyReconnected);
+	ntySetProxyDisconnect(ntyDisconnect);
 	LOG(" ntyClientInitilize ");
 	return ;
 }
 
 
+void Java_com_wbj_ndk_natty_client_NattyClient_ntySendMassDataPacket(JNIEnv *env, jobject thiz, jbyteArray DevIdArray, int length) {
+	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
 
+	ntySendMassDataPacket(data, length);
+}
+
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobject thiz) {
+	(*env)->GetJavaVM(env, &gJavaVM);
+	gJavaObj = (*env)->NewGlobalRef(env, thiz);
+
+	int ret = ntyStartupClient();
+	if (ret == -1) {
+		ntyReleaseNetwork();
+	}
+
+	LOG(" ntyStartupClient %d", ret);
+	return ret;
+}

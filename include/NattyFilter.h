@@ -65,11 +65,15 @@ typedef struct {
 } Packet;
 
 void* ntyProtocolFilterInit(void);
+void* ntyProtocolFilterInstance(void);
+
 void ntyProtocolFilterProcess(void *_filter, unsigned char *buffer, U32 length,const void *obj);
 void ntyProtocolFilterRelease(void *_filter);
 
 void ntyGenCrcTable(void);
 U32 ntyGenCrcValue(U8 *buf, int length);
+
+void ntyProtoHttpProxyTransform(C_DEVID fromId, C_DEVID toId, U8 *buf, int length);
 
 
 typedef struct _Node {

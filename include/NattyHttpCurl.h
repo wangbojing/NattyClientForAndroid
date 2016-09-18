@@ -42,76 +42,28 @@
  */
 
 
-package com.wbj.ndk.natty.client;
+#ifndef __NATTY_HTTP_CURL_H__
+#define __NATTY_HTTP_CURL_H__
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.TextView;
 
-public class MainActivity extends Activity {
+#include "NattyAbstractClass.h"
 
-	private NattyClient nattyClient = new NattyClient();	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-			
-		setContentView(R.layout.activity_main);	
-		TextView txtView = (TextView)findViewById(R.id.txtShowView);
-		//txtView.setText(nattyClient.getNativeBuffer());
-		txtView.setText("res:" + nattyClient.add(2, 3));
-		
-		
-//		nattyClient.nativeInitilize();
-//		nattyClient.nativeThreadStart();
-//		Log.i("Native", "nativeThreadStart");
-//		try {
-//			byte[] buffer = nattyClient.getNativeBuffer();
-//			
-//			for (int i = 0;i < buffer.length;i ++) {
-//				Log.i("Native", "buf " + buffer[i]);
-//			}
-//			//Log.i("MainActivity", "nativeThreadStart" + str);
-//		} catch (Exception e) {
-//			Log.i("Native", "nativeThreadStart");
-//			e.printStackTrace();
-//		}
-		
-		
-		
-		byte[] devId = {0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-		nattyClient.ntyClientInitilize();
-		nattyClient.setNattyDevId(devId);
-	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
+#define HTTP_QJK_BASE_URL		"http://shangshousoft.applinzi.com"
+#define HTTP_GAODE_BASE_URL		"http://apilocate.amap.com"
 
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
-		int id = item.getItemId();
-		if (id == R.id.action_settings) {
-			return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
 
-	@Override
-	protected void onDestroy() {
-		// TODO Auto-generated method stub
-		super.onDestroy();
-		
-		//nattyClient.nativeThreadStop();
-	}
-	
-	
-}
+int ntyHttpMtkQuickLocation(void *arg);
+int ntyHttpGaodeWifiCellAPI(void *arg);
+int ntyHttpQJKFallen(void *arg);
+
+
+
+
+#endif
+
+
+
+
+
+

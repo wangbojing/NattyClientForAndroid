@@ -33,7 +33,9 @@ LOCAL_C_INCLUDES := 	openssl_aes.h \
 		   	NattyProtocol.h \
 		   	NattyNetwork.h \
 			NattyProtoClient.h \
-		   	NattyRBTree.h
+			NattyUtils.h \
+		   	NattyRBTree.h	\
+		   	NattyLetter.h	\
 
 LOCAL_CFLAGS	+= -I $(LOCAL_PATH)/include -I $(LOCAL_PATH)
 
@@ -48,6 +50,8 @@ LOCAL_SRC_FILES  := 	NattyClient-jni.c \
 		    	./src/NattyTimer.c \
 		    	./src/NattyNetwork.c \
 				./src/NattyProtoClient.c \
+				./src/NattyUtils.c \
+				./src/NattyLetter.c	\
 		    	./ssl/openssl_aes_cfb.c \
 		    	./ssl/openssl_aes_core.c \
 		    	./ssl/openssl_cbc_enc.c \
