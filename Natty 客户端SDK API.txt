@@ -1,30 +1,30 @@
 1.int ntyStartupClient(void);
-ÃèÊö£ºÆô¶¯SDK£¬ÔÚÖ´ĞĞ¸Ãº¯ÊıÇ°ĞèÒªÉèÖÃÒÔÏÂº¯Êı£º
-ntySetSendSuccessCallback£¨·¢ËÍ³É¹¦£©
-ntySetSendFailedCallback£¨·¢ËÍ³¬Ê±£©
-ntySetProxyCallback£¨½ÓÊÕÊı¾İ£©
-ntySetBindResult£¨AppÓëDevice°ó¶¨·µ»Ø½á¹û£©
-ntySetUnBindResult£¨AppÓëDevice½â°ó·µ»Ø½á¹û£©
-ntySetProxyDisconnect£¨¶Ï¿ªÁ¬½Ó£©
-ntySetProxyReconnect£¨¶Ï¿ªÁ¬½Óºó×Ô¶¯Á¬½Ó³É¹¦µÄ·µ»Ø½á¹¹£©
-²ÎÊı£ºNULL
-·µ»ØÖµ£º0 Ö´ĞĞ³É¹¦£¬-1 Ö´ĞĞÊ§°Ü
+æè¿°ï¼šå¯åŠ¨SDKï¼Œåœ¨æ‰§è¡Œè¯¥å‡½æ•°å‰éœ€è¦è®¾ç½®ä»¥ä¸‹å‡½æ•°ï¼š
+ntySetSendSuccessCallbackï¼ˆå‘é€æˆåŠŸï¼‰
+ntySetSendFailedCallbackï¼ˆå‘é€è¶…æ—¶ï¼‰
+ntySetProxyCallbackï¼ˆæ¥æ”¶æ•°æ®ï¼‰
+ntySetBindResultï¼ˆAppä¸Deviceç»‘å®šè¿”å›ç»“æœï¼‰
+ntySetUnBindResultï¼ˆAppä¸Deviceè§£ç»‘è¿”å›ç»“æœï¼‰
+ntySetProxyDisconnectï¼ˆæ–­å¼€è¿æ¥ï¼‰
+ntySetProxyReconnectï¼ˆæ–­å¼€è¿æ¥åè‡ªåŠ¨è¿æ¥æˆåŠŸçš„è¿”å›ç»“æ„ï¼‰
+å‚æ•°ï¼šNULL
+è¿”å›å€¼ï¼š0 æ‰§è¡ŒæˆåŠŸï¼Œ-1 æ‰§è¡Œå¤±è´¥
 
 
 2.void ntyShutdownClient(void);
-²ÎÊı£ºNULL
-·µ»ØÖµ£ºNULL
+å‚æ•°ï¼šNULL
+è¿”å›å€¼ï¼šNULL
 
-ÀàĞÍ¶¨Òå£º
+ç±»å‹å®šä¹‰ï¼š
 typedef unsigned char U8;
 typedef unsigned short U16;
 typedef unsigned int U32;
 typedef long long DEVID;
-»Øµ÷º¯Êı¶¨Òå£º
+å›è°ƒå‡½æ•°å®šä¹‰ï¼š
 typedef void (*PROXY_CALLBACK_CLINET)(int len);
 typedef void (*PROXY_HANDLE_CLIENT)(DEVID id, int len);
 
-3.»Øµ÷º¯ÊıÉèÖÃ£¬ÔÚSDKÄÚ²¿»áµ÷ÓÃÒÔÏÂº¯Êı£¬ÔÚµ÷ÓÃntyStartupClientÖ®Ç°£¬±ØĞëÉèÖÃÕâĞ©º¯Êı
+3.å›è°ƒå‡½æ•°è®¾ç½®ï¼Œåœ¨SDKå†…éƒ¨ä¼šè°ƒç”¨ä»¥ä¸‹å‡½æ•°ï¼Œåœ¨è°ƒç”¨ntyStartupClientä¹‹å‰ï¼Œå¿…é¡»è®¾ç½®è¿™äº›å‡½æ•°
 void ntySetSendSuccessCallback(PROXY_CALLBACK_CLINET cb);
 void ntySetSendFailedCallback(PROXY_CALLBACK_CLINET cb);
 void ntySetProxyCallback(PROXY_HANDLE_CLIENT cb);
@@ -35,81 +35,81 @@ void ntySetProxyReconnect(PROXY_CALLBACK_CLINET cb);
 
 
 4.U8* ntyGetRecvBuffer(void);
-ÃèÊö£º»ñÈ¡RecvBufferµÄÊı¾İ
-²ÎÊı£ºNULL
-·µ»ØÖµ£ºRecvBufferÊı¾İ
+æè¿°ï¼šè·å–RecvBufferçš„æ•°æ®
+å‚æ•°ï¼šNULL
+è¿”å›å€¼ï¼šRecvBufferæ•°æ®
 
-Àı³Ì 1.0£º
+ä¾‹ç¨‹ 1.0ï¼š
 ntySetProxyCallback(ntyUserRecvCb);
 
 void ntyUserRecvCb(DEVID devid, int len) {
 	int length = ntyGetRecvBufferSize();
 	U8 *buffer = ntyGetRecvBuffer();
-	//´Ë´¦ len µÈÓÚ length 
+	//æ­¤å¤„ len ç­‰äº length 
 	ntydbg(" devid:%lld, len:%d, %s ", devid, len, buffer);
 }
 
 
 5.void ntySetDevId(DEVID id);
-ÃèÊö£ºÉèÖÃµ±Ç°ÓÃ»§µÄID
-²ÎÊı£ºDEVID
-·µ»ØÖµ£ºNULL
+æè¿°ï¼šè®¾ç½®å½“å‰ç”¨æˆ·çš„ID
+å‚æ•°ï¼šDEVID
+è¿”å›å€¼ï¼šNULL
 
 6.int ntyGetRecvBufferSize(void);
-ÃèÊö£º»ñÈ¡RecvÊı¾İ³¤¶È
-²ÎÊı£ºNULL
-·µ»ØÖµ£ºRecv³¤¶È
-Ï¸½Ú£º²Î¿´Àı³Ì1.0
+æè¿°ï¼šè·å–Recvæ•°æ®é•¿åº¦
+å‚æ•°ï¼šNULL
+è¿”å›å€¼ï¼šRecvé•¿åº¦
+ç»†èŠ‚ï¼šå‚çœ‹ä¾‹ç¨‹1.0
 
 
 7.void ntyReleaseNetwork(void);
-ÃèÊö£ºÊÍ·ÅÍøÂçµÄSocket£¬²¢»á·¢ÉúÖØÁ¬£¬´Ë½Ó¿Ú²»½¨ÒéÊ¹ÓÃ£¬Ê¹ÓÃntyShutdownClient´úÌæ
-²ÎÊı£ºNULL
-·µ»ØÖµ£ºNULL
+æè¿°ï¼šé‡Šæ”¾ç½‘ç»œçš„Socketï¼Œå¹¶ä¼šå‘ç”Ÿé‡è¿ï¼Œæ­¤æ¥å£ä¸å»ºè®®ä½¿ç”¨ï¼Œä½¿ç”¨ntyShutdownClientä»£æ›¿
+å‚æ•°ï¼šNULL
+è¿”å›å€¼ï¼šNULL
 
 8.int ntyGetNetworkStatus(void);
-ÃèÊö£º»ñÈ¡ÍøÂçÁ¬½Ó×´Ì¬
-²ÎÊı£ºNULL
-·µ»ØÖµ£º0 ÍøÂçÁ¬½ÓÕı³££¬-1 ÍøÂçÒÑ¾­¶Ï¿ªÁ¬½Ó
+æè¿°ï¼šè·å–ç½‘ç»œè¿æ¥çŠ¶æ€
+å‚æ•°ï¼šNULL
+è¿”å›å€¼ï¼š0 ç½‘ç»œè¿æ¥æ­£å¸¸ï¼Œ-1 ç½‘ç»œå·²ç»æ–­å¼€è¿æ¥
 
 9.void ntyBindClient(DEVID did);
-ÃèÊö£ºµ±Ç°User°ó¶¨Device £¬
-²ÎÊı£º[in]´Ë´¦´«ÈëµÄÊÇDeviceID£¬
-·µ»ØÖµ£ºNULL
-Ï¸½Ú£º°ó¶¨µÄ½á¹û²ÎÊı»áÔÚntySetBindResult»Øµ÷º¯ÊıÖĞ·µ»Ø½á¹û
-ntySetBindResult»Øµ÷º¯Êı½ÓÊÕ²ÎÊıÖµ 
-0£º´ú±í³É¹¦£¬1£º´ú±í UserId²»´æÔÚ£¬2£º´ú±íDeviceId²»´æÔÚ£¬3£º´ú±íUserIdÓëDeviceIdÒÑ¾­°ó¶¨¹ıÁË
+æè¿°ï¼šå½“å‰Userç»‘å®šDevice ï¼Œ
+å‚æ•°ï¼š[in]æ­¤å¤„ä¼ å…¥çš„æ˜¯DeviceIDï¼Œ
+è¿”å›å€¼ï¼šNULL
+ç»†èŠ‚ï¼šç»‘å®šçš„ç»“æœå‚æ•°ä¼šåœ¨ntySetBindResultå›è°ƒå‡½æ•°ä¸­è¿”å›ç»“æœ
+ntySetBindResultå›è°ƒå‡½æ•°æ¥æ”¶å‚æ•°å€¼ 
+0ï¼šä»£è¡¨æˆåŠŸï¼Œ1ï¼šä»£è¡¨ UserIdä¸å­˜åœ¨ï¼Œ2ï¼šä»£è¡¨DeviceIdä¸å­˜åœ¨ï¼Œ3ï¼šä»£è¡¨UserIdä¸DeviceIdå·²ç»ç»‘å®šè¿‡äº†
 
 
 10.void ntyUnBindClient(DEVID did);
-ÃèÊö£ºµ±Ç°User½â°óDevice £¬
-²ÎÊı£º[in]´Ë´¦´«ÈëµÄÊÇDeviceID£¬
-·µ»ØÖµ£ºNULL
-Ï¸½Ú£º·µ»Ø½á¹ûÔÚntySetUnBindResult»Øµ÷º¯ÊıÖĞ·µ»Ø
-0£º´ú±í½â°ó³É¹¦£¬1£º´ú±íUserIdÓëDeviceIdµÄ¹ØÏµ²»´æÔÚ
+æè¿°ï¼šå½“å‰Userè§£ç»‘Device ï¼Œ
+å‚æ•°ï¼š[in]æ­¤å¤„ä¼ å…¥çš„æ˜¯DeviceIDï¼Œ
+è¿”å›å€¼ï¼šNULL
+ç»†èŠ‚ï¼šè¿”å›ç»“æœåœ¨ntySetUnBindResultå›è°ƒå‡½æ•°ä¸­è¿”å›
+0ï¼šä»£è¡¨è§£ç»‘æˆåŠŸï¼Œ1ï¼šä»£è¡¨UserIdä¸DeviceIdçš„å…³ç³»ä¸å­˜åœ¨
 
 11.DEVID* ntyGetFriendsList(int *Count);
-ÃèÊö£º»ñÈ¡µ±Ç°ÓÃ»§°ó¶¨µÄDeviceIdList£¬´Ëº¯ÊıÔÚntyStartupClientÒÔºóÊ¹ÓÃ
-²ÎÊı£º[out] ÓÃ»§¸öÊı
-·µ»ØÖµ£º·µ»ØDeviceIdList£¬Í¨¹ıntyReleaseFriendsList
-Ï¸½Ú£ºÔÚntyStartupClient³É¹¦µ÷ÓÃºó£¬Ö´ĞĞntyGetFriendsList¼´¿É»ñÈ¡DeviceIdList
+æè¿°ï¼šè·å–å½“å‰ç”¨æˆ·ç»‘å®šçš„DeviceIdListï¼Œæ­¤å‡½æ•°åœ¨ntyStartupClientä»¥åä½¿ç”¨
+å‚æ•°ï¼š[out] ç”¨æˆ·ä¸ªæ•°
+è¿”å›å€¼ï¼šè¿”å›DeviceIdListï¼Œé€šè¿‡ntyReleaseFriendsList
+ç»†èŠ‚ï¼šåœ¨ntyStartupClientæˆåŠŸè°ƒç”¨åï¼Œæ‰§è¡ŒntyGetFriendsListå³å¯è·å–DeviceIdList
 
 12.void ntyReleaseFriendsList(DEVID **list);
-ÃèÊö£ºÊÍ·ÅFriendsList
-²ÎÊı:[in/out] Í¨¹ıntyGetFriendsList»ñÈ¡µÄ·µ»ØÖµ£¬Í¨¹ı´Ëº¯ÊıÊÍ·Å
-·µ»ØÖµ£ºNULL
+æè¿°ï¼šé‡Šæ”¾FriendsList
+å‚æ•°:[in/out] é€šè¿‡ntyGetFriendsListè·å–çš„è¿”å›å€¼ï¼Œé€šè¿‡æ­¤å‡½æ•°é‡Šæ”¾
+è¿”å›å€¼ï¼šNULL
 
 
 13.int ntySendDataPacket(DEVID toId, U8 *data, int length);
-ÃèÊö£º·¢ËÍÊı¾İ¸øDevice
-²ÎÊı£º	@toId£ºDevice Id
-	@data£º·¢ËÍÊı¾İ
-	@length£ºdataÊı¾İµÄ³¤¶È
-·µ»ØÖµ£º·¢ËÍµÄÊı¾İ³¤¶È
+æè¿°ï¼šå‘é€æ•°æ®ç»™Device
+å‚æ•°ï¼š	[in]@toIdï¼šDevice Id
+	[in]@dataï¼šå‘é€æ•°æ®
+	[in]@lengthï¼šdataæ•°æ®çš„é•¿åº¦
+è¿”å›å€¼ï¼šå‘é€çš„æ•°æ®é•¿åº¦
 
 14.int ntySendMassDataPacket(U8 *data, int length);
-ÃèÊö£º·¢ËÍÊı¾İ¸ø°ó¶¨µÄËùÓĞÉè±¸
-²ÎÊı£º	
-	@data£º·¢ËÍÊı¾İ
-	@length£ºdataÊı¾İµÄ³¤¶È
-·µ»ØÖµ£º·¢ËÍµÄÊı¾İ³¤¶È
+æè¿°ï¼šå‘é€æ•°æ®ç»™ç»‘å®šçš„æ‰€æœ‰è®¾å¤‡
+å‚æ•°ï¼š	
+	[in]@dataï¼šå‘é€æ•°æ®
+	[in]@lengthï¼šdataæ•°æ®çš„é•¿åº¦
+è¿”å›å€¼ï¼šå‘é€çš„æ•°æ®é•¿åº¦
