@@ -71,8 +71,11 @@ void ntyShutdownClient(void);
 
 void ntySetSendSuccessCallback(PROXY_CALLBACK_CLINET cb);
 void ntySetSendFailedCallback(PROXY_CALLBACK_CLINET cb);
-void ntySetProxyCallback(PROXY_HANDLE_CLIENT cb);
+void ntySetProxyCallback(PROXY_CALLBACK_CLINET cb);
 U8* ntyGetRecvBuffer(void);
+DEVID ntyGetFromDevID(void);
+
+
 void ntySetDevId(DEVID id);
 int ntyGetRecvBufferSize(void);
 void ntyReleaseNetwork(void);

@@ -77,10 +77,11 @@ typedef enum {
 typedef struct _NATTYPROTOCOL {
 	const void *_;
 	C_DEVID devid; //App Or Device Id
+	C_DEVID fromId;
 	U8 level;
 	U8 recvBuffer[RECV_BUFFER_SIZE];
 	U16 recvLen;
-	PROXY_HANDLE_CB onProxyCallback; //just for java
+	PROXY_CALLBACK onProxyCallback; //just for java
 	RECV_CALLBACK onRecvCallback; //recv
 	PROXY_CALLBACK onProxyFailed; //send data failed
 	PROXY_CALLBACK onProxySuccess; //send data success
@@ -547,7 +548,7 @@ void ntySetSendFailedCallback(PROXY_CALLBACK cb) {
 	}
 }
 
-void ntySetProxyCallback(PROXY_HANDLE_CB cb) {
+void ntySetProxyCallback(PROXY_CALLBACK cb) {
 	NattyProto* proto = ntyProtoInstance();
 	if (proto) {
 		proto->onProxyCallback = cb;
@@ -646,6 +647,15 @@ U8* ntyGetRecvBuffer(void) {
 	}
 	return NULL;
 }
+#if 1
+C_DEVID ntyGetFromDevID(void) {
+	NattyProto* proto = ntyProtoInstance();
+	if (proto) {
+		return proto->fromId;
+	}
+	return 0x0;
+}
+#endif
 
 int ntyGetRecvBufferSize(void) {
 	NattyProto* proto = ntyProtoInstance();
@@ -798,7 +808,9 @@ static void* ntyRecvProc(void *arg) {
 
 				memcpy(data, buf+NTY_PROTO_DATAPACKET_CONTENT_IDX, recByteCount);
 				LOG(" recv:%s end\n", data);
-				
+
+				//memset(proto->fromId, 0, sizeof(10));
+				memcpy(&proto->fromId, &friId, sizeof(C_DEVID));
 				//sendProxyDataPacketAck(friId, ack);
 				if (buf[NTY_PROTO_MESSAGE_TYPE] == MSG_RET) {
 					if (proto->onProxyFailed)
@@ -814,7 +826,7 @@ static void* ntyRecvProc(void *arg) {
 				LOG("proxyAck end");
 				if (proto->onProxyCallback) {
 					proto->recvLen -= (NTY_PROTO_DATAPACKET_CONTENT_IDX+sizeof(U32));
-					proto->onProxyCallback(friId, proto->recvLen);
+					proto->onProxyCallback(proto->recvLen);
 				}
 				LOG("onProxyCallback end");
 			} else if (buf[NTY_PROTO_TYPE_IDX] == NTY_PROTO_DATAPACKET_ACK) {
