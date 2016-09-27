@@ -353,6 +353,10 @@ void *ntyNetworkInstance(void) {
 	return pNetworkOpera;
 }
 
+void *ntyGetNetworkInstance(void) {
+	return pNetworkOpera;
+}
+
 void* ntyNetworkRelease(void *self) {	
 	Delete(self);
 	pNetworkOpera = NULL;
@@ -384,6 +388,7 @@ int ntyReconnect(void *self) {
 
 int ntyGetSocket(void *self) {
 	Network *network = self;
+	if (network == NULL) return -1;
 	return network->sockfd;
 }
 

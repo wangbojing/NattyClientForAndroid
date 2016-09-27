@@ -194,27 +194,27 @@ void ntyUserRecvCb(int len) {
 }
 
 void ntyDisconnect(int arg) {
-	LOG("ntyDisconnect\n");
+	LOG("ntyDisconnect %d\n", arg);
 	ntyCallJavaFunction("onNativeDisconnect", arg);
 }
 
 void ntyReconnected(int arg) {
-	LOG("ntyReconnected\n");
+	LOG("ntyReconnected %d\n", arg);
 	ntyCallJavaFunction("onNativeReconnect", arg);
 }
 
 void ntyBindResult(int arg) {
 	LOG("ntyBindResult\n");
-	ntyCallJavaFunction("onNativeBind", arg);
+	ntyCallJavaFunction("ntyNativeBindResult", arg);
 }
 
 void ntyUnBindResult(int arg) {
 	LOG("ntyUnBindResult\n");
-	ntyCallJavaFunction("onNativeUnBind", arg);
+	ntyCallJavaFunction("ntyNativeUnBindResult", arg);
 }
 
 
-jint Java_com_wbj_ndk_natty_client_NattyClient_getBufferSize(JNIEnv *env, jobject thiz) {
+int Java_com_wbj_ndk_natty_client_NattyClient_getBufferSize(JNIEnv *env, jobject thiz) {
 	return ntyGetRecvBufferSize();
 }
 
@@ -253,10 +253,10 @@ void Java_com_wbj_ndk_natty_client_NattyClient_setNattyDevId(JNIEnv *env, jobjec
 	return ;
 }
 
-void Java_com_wbj_ndk_natty_client_NattyClient_setNattyAppId(JNIEnv *env, jobject thiz, jlong Appid) {
 
-
-	DEVID AppId = Appid;
+void Java_com_wbj_ndk_natty_client_NattyClient_setNattyAppId(JNIEnv *env, jobject thiz, jlong aid) {
+	DEVID AppId;
+	memcpy(&AppId, &aid, sizeof(DEVID));
 
 	ntySetDevId(AppId);
 
@@ -264,7 +264,6 @@ void Java_com_wbj_ndk_natty_client_NattyClient_setNattyAppId(JNIEnv *env, jobjec
 
 	return ;
 }
-
 
 void Java_com_wbj_ndk_natty_client_NattyClient_ntyClientInitilize(JNIEnv *env, jobject thiz) {
 	(*env)->GetJavaVM(env, &gJavaVM);
@@ -285,16 +284,12 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyClientInitilize(JNIEnv *env, j
 
 void Java_com_wbj_ndk_natty_client_NattyClient_ntySendMassDataPacket(JNIEnv *env, jobject thiz, jbyteArray DevIdArray, int length) {
 	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
-#if 0
-	ntySendMassDataPacket(data, length);
-#else
-	ntySendDataPacket(0x0, data, length);
-#endif
-}
 
+	ntySendMassDataPacket(data, length);
+}
+#if 0
 //0x352315052834187
 //87 41 83 52 50  31 52 03
-#if 0
 void Java_com_wbj_ndk_natty_client_NattyClient_ntySendDataPacket(JNIEnv *env, jobject thiz, jbyteArray DevID, jbyteArray DevIdArray, int length) {
 	jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
 	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
@@ -307,14 +302,13 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntySendDataPacket(JNIEnv *env, jo
 
 //0x352315052834187
 //87 41 83 52 50  31 52 03
-
 void Java_com_wbj_ndk_natty_client_NattyClient_ntyBindClient(JNIEnv *env, jobject thiz, jbyteArray DevID) {
 	jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
 
 	DEVID id = 0;
 	memcpy(&id, devid, sizeof(DEVID));
 
-	//ntySendDataPacket(id, data, length);
+	LOG(" ntyBindClient : %lld ", id);
 	ntyBindClient(id);
 }
 
@@ -332,6 +326,7 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyUnBindClient(JNIEnv *env, jobj
 #else
 
 void Java_com_wbj_ndk_natty_client_NattyClient_ntySendDataPacket(JNIEnv *env, jobject thiz, jlong DevID, jbyteArray DevIdArray, int length) {
+	//jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
 	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
 
 	DEVID id = 0;
@@ -340,11 +335,15 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntySendDataPacket(JNIEnv *env, jo
 	ntySendDataPacket(id, data, length);
 }
 
+//0x352315052834187
+//87 41 83 52 50  31 52 03
 void Java_com_wbj_ndk_natty_client_NattyClient_ntyBindClient(JNIEnv *env, jobject thiz, jlong DevID) {
+	//jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
 
 	DEVID id = 0;
 	memcpy(&id, &DevID, sizeof(DEVID));
 
+	LOG(" ntyBindClient : %lld ", id);
 	ntyBindClient(id);
 }
 
@@ -355,14 +354,14 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyUnBindClient(JNIEnv *env, jobj
 	DEVID id = 0;
 	memcpy(&id, &DevID, sizeof(DEVID));
 
+	LOG(" ntyUnBindClient : %lld ", id);
 	ntyUnBindClient(id);
 }
 
 #endif
 
 
-
-jint Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobject thiz) {
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobject thiz) {
 	
 	int ret = ntyStartupClient();
 	if (ret == -1) {
@@ -373,7 +372,7 @@ jint Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, job
 	return ret;
 }
 
-jint Java_com_wbj_ndk_natty_client_NattyClient_ntyShutdownClient(JNIEnv *env, jobject thiz) {
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyShutdownClient(JNIEnv *env, jobject thiz) {
 
 	ntyShutdownClient();
 	
@@ -392,16 +391,6 @@ jlongArray Java_com_wbj_ndk_natty_client_NattyClient_getDeviceList(JNIEnv *env, 
 	ntyReleaseFriendsList(&list);
 
 	return rtnArr;
-
-}
-
-jint Java_com_wbj_ndk_natty_client_NattyClient_getDeviceCount(JNIEnv *env, jobject thiz) {
-
-	int Count = 0;
-	DEVID *list = ntyGetFriendsList(&Count);
-	ntyReleaseFriendsList(&list);
-
-	return Count;
 
 }
 

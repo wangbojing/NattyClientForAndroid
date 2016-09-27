@@ -46,7 +46,7 @@
 #include "NattyProtoClient.h"
 
 
-#if 0
+#if 1
 void ntyUserRecvCb(int len) {
 	//int i = 0;
 	U8 *buffer = ntyGetRecvBuffer();

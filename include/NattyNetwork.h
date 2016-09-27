@@ -63,7 +63,7 @@ typedef unsigned char U8;
 typedef long long C_DEVID;
 #endif
 
-#define SERVER_NAME		"112.93.116.188" //"127.0.0.1"
+#define SERVER_NAME		"112.93.116.189" //"127.0.0.1" 
 #define SERVER_PORT		8888
 #define RECV_BUFFER_SIZE	(1024+16)
 #define NORMAL_BUFFER_SIZE	64
@@ -157,6 +157,7 @@ typedef struct _NETWORKOPERA {
 
 
 void *ntyNetworkInstance(void);
+void *ntyGetNetworkInstance(void);
 void *ntyNetworkRelease(void *self);
 int ntySendFrame(void *self, struct sockaddr_in *to, U8 *buf, int len);
 int ntyRecvFrame(void *self, U8 *buf, int len, struct sockaddr_in *from);

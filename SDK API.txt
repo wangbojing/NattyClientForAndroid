@@ -79,7 +79,7 @@ void ntyUserRecvCb(DEVID devid, int len) {
 细节：绑定的结果参数会在ntySetBindResult回调函数中返回结果
 ntySetBindResult回调函数接收参数值 
 0：代表成功，1：代表 UserId不存在，2：代表DeviceId不存在，3：代表UserId与DeviceId已经绑定过了
-
+4：设备尚未激活
 
 10.void ntyUnBindClient(DEVID did);
 描述：当前User解绑Device ，

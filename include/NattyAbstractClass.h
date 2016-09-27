@@ -59,6 +59,7 @@
 #define WCHAR_WIDTH				2
 #define WORD_WIDTH				4
 
+
 //ntyLogInfo(format, ##__VA_ARGS__)//
 
 #define NTY_DEBUG 	1
