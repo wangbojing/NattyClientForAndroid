@@ -46,7 +46,6 @@ LOCAL_CFLAGS	+= -I $(LOCAL_PATH)/include -I $(LOCAL_PATH)
 
 LOCAL_SRC_FILES  := 	NattyClient-jni.c \
 				./src/NattyAbstractClass.c \
-		    	./src/NattyRBTree.c \
 		    	./src/NattyTimer.c \
 		    	./src/NattyNetwork.c \
 				./src/NattyProtoClient.c \

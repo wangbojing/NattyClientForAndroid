@@ -42,28 +42,20 @@
  */
 
 
-#ifndef __DAVEQUEUE_DEVICE_H__
-#define __DAVEQUEUE_DEVICE_H__
+#ifndef __NATTY_RESULT_H__
+#define __NATTY_RESULT_H__
 
-#ifndef DAVE_DEV_MAJOR
-#define DAVE_DEV_MAJOR		247
-#endif
-
-#ifndef DAVE_DEV_COUNTS
-#define DAVE_DEV_COUNTS		2
-#endif
-
-#ifndef DAVEMQDEV_MEMORY_SIZE
-#define DAVEMQDEV_MEMORY_SIZE	4096
-#endif
-
-struct DaveMq_dev {
-	char *data;
-	unsigned long size;
-};
-
+typedef enum _NRESULT {
+	NTY_RESULT_ERROR = -2, //param error
+	NTY_RESULT_FAILED = -1, //param failed
+	NTY_RESULT_SUCCESS = 0,
+	NTY_RESULT_EXIST = 1,
+	NTY_RESULT_PROCESS = 2,
+	NTY_RESULT_NOEXIST = 3,
+	NTY_RESULT_NEEDINSERT = 4,
+	
+} NResult;
 
 #endif
-
 
 

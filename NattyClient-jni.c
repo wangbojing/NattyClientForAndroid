@@ -42,14 +42,13 @@
  */
 
 #include <string.h>
+#include <errno.h>
 
 #include "NattyClient-jni.h"
 #include "NattyProtoClient.h"
 
 #include <pthread.h>
 #include <android/log.h>
-
-
 
 
 JavaVM *gJavaVM;
@@ -61,13 +60,14 @@ static volatile int gIsThreadExit = 0;
 static void* native_thread_exec(void *arg){
 	JNIEnv *env;
 	(*gJavaVM)->AttachCurrentThread(gJavaVM, &env, NULL);
-
+	LOG("AttachCurrentThread");
 	jclass javaClass = (*env)->GetObjectClass(env, gJavaObj);
 	if (javaClass == NULL) {
 		LOG("Fail to find javaClass");
 		return 0;
 	}
-
+	LOG("javaClass");
+#if 0
 	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, "onNativeCallback", "(I)V");
 	if (javaCallback == NULL) {
 		LOG("Fail to find method onNativeCallback");
@@ -79,6 +79,22 @@ static void* native_thread_exec(void *arg){
 		(*env)->CallVoidMethod(env, gJavaObj, javaCallback, count++);
 		sleep(2);
 	}
+#elif 1
+	U8 json[4] = {'A', 'B', 'C', 'D'};
+	int length = 4;
+
+	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, "ntyNativeLoginAckResult", "([BI)V");
+	if (javaCallback == NULL) {
+		LOG("Fail to find method %s", "ntyNativeLoginAckResult");
+		return ;
+	}
+	while (!gIsThreadExit) {
+		LOG("gIsThreadExit loop leave");
+		(*env)->CallVoidMethod(env, gJavaObj, javaCallback, json, length);
+		sleep(2);
+	}
+#else
+#endif
 	(*gJavaVM)->DetachCurrentThread(gJavaVM);
 
 	LOG("native_thread_exec loop leave");
@@ -170,6 +186,77 @@ void ntyCallJavaFunction(const char *func, int arg) {
 	LOG("native_thread_exec loop leave");
 }
 
+void ntyCallJavaFuncStatus(const char *func, int status) {
+	JNIEnv *env;
+	if ((*gJavaVM)->AttachCurrentThread(gJavaVM, &env, NULL) != JNI_OK) {
+		LOG(" ntyCallJavaFuncStatus failed %s\n", func);
+		return ;
+	}
+	jclass javaClass = (*env)->GetObjectClass(env, gJavaObj);
+	if (javaClass == NULL) {
+		LOG("Fail to find javaClass");
+		return ;
+	}
+	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, func, "(I)V");
+	if (javaCallback == NULL) {
+		LOG("Fail to find method %s", func);
+		return ;
+	}
+	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, status);
+
+	if((*gJavaVM)->DetachCurrentThread(gJavaVM) != JNI_OK) {
+		LOG("DetachCurrentThread %s", func);
+		return ;
+	}
+}
+
+void ntyCallJavaFuncParam(const char *func, U8 *json, int length) {
+	JNIEnv *env;
+	if ((*gJavaVM)->AttachCurrentThread(gJavaVM, &env, NULL) != JNI_OK) {
+		LOG(" ntyCallJavaFuncParam failed %s\n", func);
+		return ;
+	}
+	jclass javaClass = (*env)->GetObjectClass(env, gJavaObj);
+	if (javaClass == NULL) {
+		LOG("Fail to find javaClass");
+		return ;
+	}
+	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, func, "([BI)V");
+	if (javaCallback == NULL) {
+		LOG("Fail to find method %s", func);
+		return ;
+	}
+	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, json, length);
+
+	if((*gJavaVM)->DetachCurrentThread(gJavaVM) != JNI_OK) {
+		LOG("DetachCurrentThread %s", func);
+		return ;
+	}
+}
+
+void ntyCallJavaFuncReturn(const char *func, DEVID fromId, U8 *json, int length) {
+	JNIEnv *env;
+	if ((*gJavaVM)->AttachCurrentThread(gJavaVM, &env, NULL) != JNI_OK) {
+		LOG(" ntyCallJavaFuncParam failed %s\n", func);
+		return ;
+	}
+	jclass javaClass = (*env)->GetObjectClass(env, gJavaObj);
+	if (javaClass == NULL) {
+		LOG("Fail to find javaClass");
+		return ;
+	}
+	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, func, "(J[CI)V");
+	if (javaCallback == NULL) {
+		LOG("Fail to find method %s", func);
+		return ;
+	}
+	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, fromId, json, length);
+	if((*gJavaVM)->DetachCurrentThread(gJavaVM) != JNI_OK) {
+		LOG("DetachCurrentThread %s", func);
+		return ;
+	}
+}
+
 void ntySendSuccess(int arg) {
 	LOG("Success\n");
 	ntyCallJavaFunction("onNativeSendSuccess", arg);
@@ -193,68 +280,133 @@ void ntyUserRecvCb(int len) {
 	ntyCallJavaFunction("onNativeUserRecvCallback", len);
 }
 
+void ntyHeartBeatAckResult(int status) {
+	LOG(" ntyLoginAckResult:%d\n", status);
+}
+
+
+void ntyLogoutAckResult(int status) {
+	LOG(" ntyLogoutAckResult:%d\n", status);
+	ntyCallJavaFunction("ntyLogoutAckResult", status);
+}
+
+void ntyTimeAckResult(U8 *json, int length) {
+
+}
+
+void ntyICCIDAckResult(U8 *json, int length) {
+
+}
+
+void ntyCommonReqResult(DEVID fromId, U8 *json, int length) {
+	LOG(" ntyCommonReqResult : %lld\n", fromId);
+	LOG(" ntyCommonReqResult : %s\n", json);
+
+	ntyCallJavaFuncReturn("ntyNativeCommonReqResult", fromId, json, length);
+}
+
+void ntyCommonAckResult(U8 *json, int length) {
+	ntyCallJavaFuncParam("ntyNativeCommonAckResult", json, length);
+}
+
+
+//1
+void ntyLoginAckResult(U8 *json, int length) {
+	LOG(" ntyLoginAckResult:%s\n", json);
+	ntyCallJavaFuncParam("ntyNativeLoginAckResult", json, length);
+}
+//2
+void ntyBindResult(int arg) {
+	LOG("ntyBindResult\n");
+	ntyCallJavaFuncStatus("ntyNativeBindResult", arg);
+}
+//3
+void ntyUnBindResult(int arg) {
+	LOG("ntyUnBindResult\n");
+	ntyCallJavaFuncStatus("ntyNativeUnBindResult", arg);
+}
+//4
+void ntyVoiceDataAckResult(int status) {
+	//voice data send success
+	LOG(" ntyVoiceDataAckResult: %d\n", status);
+	ntyCallJavaFuncStatus("ntyNativeVoiceDataAckResult", status);
+}
+//5
+void ntyOfflineMsgAckResult(U8 *json, int length) {
+	LOG(" ntyOfflineMsgAckResult:%s\n", json);
+	ntyCallJavaFuncParam("ntyNativeOfflineMsgAckResult", json, length);
+}
+//6
+void ntyDataResult(U8 *json, int length) {
+	LOG(" ntyDataResult:%d\n", length);
+	ntyCallJavaFuncStatus("ntyNativeDataResult", length);
+}
+//7
+void ntyVoiceBroadCastResult(DEVID fromId, U8 *json, int length) {
+	LOG(" ntyVoiceBroadCastResult:%s\n", json);
+
+	ntyCallJavaFuncReturn("ntyNativeVoiceBroadCastResult", fromId, json, length);
+}
+//8
+void ntyLocationBroadCastResult(DEVID fromId, U8 *json, int length) {
+	LOG(" ntyLocationBroadCastResult:%s\n", json);
+
+	ntyCallJavaFuncReturn("ntyNativeLocationBroadCastResult", fromId, json, length);
+}
+//9
+void ntyCommonBroadCastResult(DEVID fromId, U8 *json, int length) {
+	LOG(" ntyCommonBoradCastResult:%s\n", json);
+
+	ntyCallJavaFuncReturn("ntyNativeCommonBoradCastResult", fromId, json, length);
+}
+//10
 void ntyDisconnect(int arg) {
 	LOG("ntyDisconnect %d\n", arg);
 	ntyCallJavaFunction("onNativeDisconnect", arg);
 }
-
+//11
 void ntyReconnected(int arg) {
 	LOG("ntyReconnected %d\n", arg);
 	ntyCallJavaFunction("onNativeReconnect", arg);
 }
 
-void ntyBindResult(int arg) {
-	LOG("ntyBindResult\n");
-	ntyCallJavaFunction("ntyNativeBindResult", arg);
+
+void ntyLocationPushResult(U8 *json, int length) {
+	LOG(" ntyLocationPushResult:%s\n", json);
+
+	ntyCallJavaFuncParam("ntyNativeLocationPushResult", json, length);
 }
 
-void ntyUnBindResult(int arg) {
-	LOG("ntyUnBindResult\n");
-	ntyCallJavaFunction("ntyNativeUnBindResult", arg);
+void ntyWeatherPushResult(U8 *json, int length) {
+	LOG(" ntyWeatherPushResult:%s\n", json);
+
+	ntyCallJavaFuncParam("ntyNativeWeatherPushResult", json, length);
 }
 
+void ntyDataRoute(DEVID fromId, U8 *json, int length) {
+	LOG(" ntyDataRoute:%s\n", json);
 
-int Java_com_wbj_ndk_natty_client_NattyClient_getBufferSize(JNIEnv *env, jobject thiz) {
-	return ntyGetRecvBufferSize();
+	ntyCallJavaFuncParam("ntyNativeDataRoute", json, length);
 }
 
-jbyteArray Java_com_wbj_ndk_natty_client_NattyClient_getNativeBuffer(JNIEnv *env, jobject thiz) {
-	char *buffer = ntyGetRecvBuffer();
-#if 1
-	jsize len = ntyGetRecvBufferSize();
+//1
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyGetVoiceBufferSize(JNIEnv *env, jobject thiz) {
+	return ntyGetRecvBigLength();
+}
+
+//2
+jbyteArray Java_com_wbj_ndk_natty_client_NattyClient_ntyGetVoiceBuffer(JNIEnv *env, jobject thiz) {
+	char *buffer = (char*)ntyGetRecvBigBuffer();
+	jsize len = ntyGetRecvBigLength();
 
 	jbyteArray rtnArr = (*env)->NewByteArray(env, len);
 	(*env)->SetByteArrayRegion(env, rtnArr, 0, len, (jbyte*)buffer);
+
 	return rtnArr;
-#else
-	return (*env)->NewStringUTF(env, buffer);
-#endif
 }
 
-jlong Java_com_wbj_ndk_natty_client_NattyClient_getFromDevID(JNIEnv *env, jobject thiz) {
-	jlong id = ntyGetFromDevID();
-	
-	return id;
-
-}
-
-void Java_com_wbj_ndk_natty_client_NattyClient_setNattyDevId(JNIEnv *env, jobject thiz, jbyteArray DevIdArray) {
-	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
-#if 0
-	DEVID AppId = *(DEVID*)data;
-#else
-	DEVID AppId = 0;
-	memcpy(&AppId, data, sizeof(DEVID));
-#endif
-	ntySetDevId(AppId);
-
-	LOG(" setNattyDevId : %lld ", AppId);
-
-	return ;
-}
-
-
-void Java_com_wbj_ndk_natty_client_NattyClient_setNattyAppId(JNIEnv *env, jobject thiz, jlong aid) {
+//3
+void Java_com_wbj_ndk_natty_client_NattyClient_ntySetSelfId(JNIEnv *env, jobject thiz, jlong aid) {
 	DEVID AppId;
 	memcpy(&AppId, &aid, sizeof(DEVID));
 
@@ -264,81 +416,17 @@ void Java_com_wbj_ndk_natty_client_NattyClient_setNattyAppId(JNIEnv *env, jobjec
 
 	return ;
 }
-
+//4
 void Java_com_wbj_ndk_natty_client_NattyClient_ntyClientInitilize(JNIEnv *env, jobject thiz) {
 	(*env)->GetJavaVM(env, &gJavaVM);
 	gJavaObj = (*env)->NewGlobalRef(env, thiz);
 
-	ntySetProxyCallback(ntyUserRecvCb);
-	ntySetSendFailedCallback(ntySendFailed);
-	ntySetSendSuccessCallback(ntySendSuccess);
-	ntySetProxyReconnect(ntyReconnected);
-	ntySetProxyDisconnect(ntyDisconnect);
-	ntySetBindResult(ntyBindResult);
-	ntySetUnBindResult(ntyUnBindResult);
-	
 	LOG(" ntyClientInitilize ");
 	return ;
 }
 
-
-void Java_com_wbj_ndk_natty_client_NattyClient_ntySendMassDataPacket(JNIEnv *env, jobject thiz, jbyteArray DevIdArray, int length) {
-	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
-
-	ntySendMassDataPacket(data, length);
-}
-#if 0
-//0x352315052834187
-//87 41 83 52 50  31 52 03
-void Java_com_wbj_ndk_natty_client_NattyClient_ntySendDataPacket(JNIEnv *env, jobject thiz, jbyteArray DevID, jbyteArray DevIdArray, int length) {
-	jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
-	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
-
-	DEVID id = 0;
-	memcpy(&id, devid, sizeof(DEVID));
-
-	ntySendDataPacket(id, data, length);
-}
-
-//0x352315052834187
-//87 41 83 52 50  31 52 03
-void Java_com_wbj_ndk_natty_client_NattyClient_ntyBindClient(JNIEnv *env, jobject thiz, jbyteArray DevID) {
-	jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
-
-	DEVID id = 0;
-	memcpy(&id, devid, sizeof(DEVID));
-
-	LOG(" ntyBindClient : %lld ", id);
-	ntyBindClient(id);
-}
-
-//0x352315052834187
-//87 41 83 52 50  31 52 03
-void Java_com_wbj_ndk_natty_client_NattyClient_ntyUnBindClient(JNIEnv *env, jobject thiz, jbyteArray DevID) {
-	jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
-
-	DEVID id = 0;
-	memcpy(&id, devid, sizeof(DEVID));
-
-	//ntySendDataPacket(id, data, length);
-	ntyUnBindClient(id);
-}
-#else
-
-void Java_com_wbj_ndk_natty_client_NattyClient_ntySendDataPacket(JNIEnv *env, jobject thiz, jlong DevID, jbyteArray DevIdArray, int length) {
-	//jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
-	jbyte *data = (*env)->GetByteArrayElements(env, DevIdArray, 0);
-
-	DEVID id = 0;
-	memcpy(&id, &DevID, sizeof(DEVID));
-
-	ntySendDataPacket(id, data, length);
-}
-
-//0x352315052834187
-//87 41 83 52 50  31 52 03
+//5
 void Java_com_wbj_ndk_natty_client_NattyClient_ntyBindClient(JNIEnv *env, jobject thiz, jlong DevID) {
-	//jbyte *devid = (*env)->GetByteArrayElements(env, DevID, 0);
 
 	DEVID id = 0;
 	memcpy(&id, &DevID, sizeof(DEVID));
@@ -347,8 +435,7 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyBindClient(JNIEnv *env, jobjec
 	ntyBindClient(id);
 }
 
-//0x352315052834187
-//87 41 83 52 50  31 52 03
+//6
 void Java_com_wbj_ndk_natty_client_NattyClient_ntyUnBindClient(JNIEnv *env, jobject thiz, jlong DevID) {
 
 	DEVID id = 0;
@@ -358,41 +445,95 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyUnBindClient(JNIEnv *env, jobj
 	ntyUnBindClient(id);
 }
 
-#endif
-
-
+//7
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobject thiz) {
+	int status = 0;
+
+	ntySetProxyCallback(ntyUserRecvCb);
+	ntySetSendFailedCallback(ntySendFailed);
+	ntySetSendSuccessCallback(ntySendSuccess);
+	ntySetProxyReconnect(ntyReconnected);
+	ntySetProxyDisconnect(ntyDisconnect);
+	ntySetBindResult(ntyBindResult);
+	ntySetUnBindResult(ntyUnBindResult);
 	
-	int ret = ntyStartupClient();
-	if (ret == -1) {
-		ntyReleaseNetwork();
+	ntySetLoginAckResult(ntyLoginAckResult);
+	ntySetHeartBeatAckResult(ntyHeartBeatAckResult);
+	ntySetLogoutAckResult(ntyLogoutAckResult);
+#if (NTY_PROTO_SELFTYPE==NTY_PROTO_CLIENT_WATCH)
+	ntySetTimeAckResult(ntyTimeAckResult);
+	ntySetICCIDAckResult(ntyICCIDAckResult);
+#endif
+	ntySetCommonReqResult(ntyCommonReqResult);
+	ntySetVoiceDataAckResult(ntyVoiceDataAckResult);
+	ntySetOfflineMsgAckResult(ntyOfflineMsgAckResult);
+	ntySetLocationPushResult(ntyLocationPushResult);
+	ntySetWeatherPushResult(ntyWeatherPushResult);
+
+	ntySetDataRoute(ntyDataRoute);
+	ntySetDataResult(ntyDataResult);
+
+	ntySetVoiceBroadCastResult(ntyVoiceBroadCastResult);
+	ntySetLocationBroadCastResult(ntyLocationBroadCastResult);
+	ntySetCommonBroadCastResult(ntyCommonBroadCastResult);
+
+
+	ntyStartupClient(&status);
+	if (status == -1) {
+		ntyShutdownClient();
 	}
 
-	LOG(" ntyStartupClient %d", ret);
-	return ret;
+	LOG(" ntyStartupClient %d", status);
+	return status;
 }
-
+//8
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyShutdownClient(JNIEnv *env, jobject thiz) {
 
 	ntyShutdownClient();
 	
 	return 0;
 }
+//9
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyCommonReqClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray json, int length) {
+	DEVID groupId = 0;
+	memcpy(&groupId, &gId, sizeof(DEVID));
 
-
-jlongArray Java_com_wbj_ndk_natty_client_NattyClient_getDeviceList(JNIEnv *env, jobject thiz) {
-	
-	int Count = 0;
-	DEVID *list = ntyGetFriendsList(&Count);
-
-	jlongArray rtnArr = (*env)->NewLongArray(env, Count);
-	(*env)->SetLongArrayRegion(env, rtnArr, 0, Count, (jlong*)list);
-
-	ntyReleaseFriendsList(&list);
-
-	return rtnArr;
-
+	jbyte *data = (*env)->GetByteArrayElements(env, json, 0);
+	return ntyCommonReqClient(groupId, data, length);
 }
+//10
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyDataRouteClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray json, int length) {
+
+	jbyte *data = (*env)->GetByteArrayElements(env, json, 0);
+	return ntyDataRouteClient(gId, data, length);
+}
+//11
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyVoiceDataReqClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray data, int length) {
+	jbyte *bData = (*env)->GetByteArrayElements(env, data, 0);
+
+	return ntyVoiceDataReqClient(gId, bData, length);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

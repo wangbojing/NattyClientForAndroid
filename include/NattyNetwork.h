@@ -48,7 +48,7 @@
 
 #include "NattyTimer.h"
 #include "NattyProtocol.h"
-#include "NattyRBTree.h"
+//#include "NattyRBTree.h"
 #include "../NattyClient-jni.h"
 
 #include <sys/types.h>
@@ -68,7 +68,7 @@ typedef long long C_DEVID;
 #define SERVER_HOSTNAME	"debug.quanjiakan.com"
 #define SERVER_PORT		8888
 #define RECV_BUFFER_SIZE	1024
-#define NORMAL_BUFFER_SIZE	64
+#define NORMAL_BUFFER_SIZE	128
 #define SENT_TIMEOUT	3
 
 
@@ -78,36 +78,6 @@ typedef long long C_DEVID;
 
 #define DEBUG_LEVEL			DEBUG_TRACE
 
-
-
-#if (DEBUG_LEVEL == DEBUG_WARNNING)
-#define warn(format, ...)			fprintf(stdout, format, ##__VA_ARGS__)
-#elif (DEBUG_LEVEL == DEBUG_TRACE)
-#define LOG(format, ...) 			fprintf(stdout, format, ##__VA_ARGS__)
-#define warn(format, ...)			fprintf(stdout, format, ##__VA_ARGS__)
-#define trace(format, ...)			fprintf(stdout, format, ##__VA_ARGS__)
-#elif (DEBUG_LEVEL == DEBUG_ERROR)
-#define error(format, ...)			fprintf(stdout, format, ##__VA_ARGS__)
-#else
-#define LOG(format, ...) 			fprintf(stdout, format, ##__VA_ARGS__)
-#endif
-
-
-#if 0
-typedef struct _ThreadArg {
-	int sockfd;
-	C_DEVID devid;
-} ThreadArg;
-
-typedef struct _FRIENDSINFO {
-	//C_DEVID devid;
-	int sockfd;
-	U32 addr;
-	U16 port;
-	U8 isP2P;
-	U8 counter;
-} FriendsInfo;
-#endif
 
 #define SIGNAL_LOGIN_REQ			0x00000001
 #define SIGNAL_LOGIN_ACK			0x00000003
@@ -130,6 +100,7 @@ typedef struct _FRIENDSINFO {
 #define SIGNAL_P2PDATAPACKET_REQ	0x00001000
 #define SIGNAL_P2PDATAPACKET_ACK	0x00003000
 
+#define trace LOG
 
 enum {
 	LEVEL_LOGIN = 0x00,
