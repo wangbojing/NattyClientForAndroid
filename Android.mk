@@ -51,6 +51,7 @@ LOCAL_SRC_FILES  := 	NattyClient-jni.c \
 				./src/NattyProtoClient.c \
 				./src/NattyUtils.c \
 				./src/NattyLetter.c	\
+				./src/NattyVector.c	\
 		    	./ssl/openssl_aes_cfb.c \
 		    	./ssl/openssl_aes_core.c \
 		    	./ssl/openssl_cbc_enc.c \

@@ -226,7 +226,12 @@ void ntyCallJavaFuncParam(const char *func, U8 *json, int length) {
 		LOG("Fail to find method %s", func);
 		return ;
 	}
-	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, json, length);
+
+	jbyteArray RtnArr = NULL;
+	RtnArr = (*env)->NewByteArray(env, length);
+	(*env)->SetByteArrayRegion(env, RtnArr, 0, length, (jbyte*)json);
+
+	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, RtnArr, length);
 
 	if((*gJavaVM)->DetachCurrentThread(gJavaVM) != JNI_OK) {
 		LOG("DetachCurrentThread %s", func);
@@ -250,7 +255,12 @@ void ntyCallJavaFuncReturn(const char *func, DEVID fromId, U8 *json, int length)
 		LOG("Fail to find method %s", func);
 		return ;
 	}
-	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, fromId, json, length);
+
+	jbyteArray RtnArr = NULL;
+	RtnArr = (*env)->NewByteArray(env, length);
+	(*env)->SetByteArrayRegion(env, RtnArr, 0, length, (jbyte*)json);
+
+	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, fromId, RtnArr, length);
 	if((*gJavaVM)->DetachCurrentThread(gJavaVM) != JNI_OK) {
 		LOG("DetachCurrentThread %s", func);
 		return ;
