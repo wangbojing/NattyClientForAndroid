@@ -182,8 +182,28 @@ void ntyCallJavaFunction(const char *func, int arg) {
 	LOG("javaCallback %s", func);
 	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, arg);
 
-	//(*gJavaVM)->DetachCurrentThread(gJavaVM);
+	(*gJavaVM)->DetachCurrentThread(gJavaVM);
 	LOG("native_thread_exec loop leave");
+}
+
+void ntyCallJavaFunctionNoThread(const char *func, int arg) {
+	JNIEnv *env;
+	LOG("ntyCallJavaFunction");
+	(*gJavaVM)->AttachCurrentThread(gJavaVM, &env, NULL);
+	LOG("AttachCurrentThread");
+	jclass javaClass = (*env)->GetObjectClass(env, gJavaObj);
+	if (javaClass == NULL) {
+		LOG("Fail to find javaClass");
+		return;
+	}
+	LOG("javaClass");
+	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, func, "(I)V");
+	if (javaCallback == NULL) {
+		LOG("Fail to find method %s", func);
+		return;
+	}
+	LOG("javaCallback %s", func);
+	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, arg);
 }
 
 void ntyCallJavaFuncStatus(const char *func, int status) {
@@ -267,6 +287,32 @@ void ntyCallJavaFuncReturn(const char *func, DEVID fromId, U8 *json, int length)
 	}
 }
 
+
+void ntyCallJavaFuncPacket(const char *func, DEVID fromId, DEVID gId, int length) {
+	JNIEnv *env;
+	if ((*gJavaVM)->AttachCurrentThread(gJavaVM, &env, NULL) != JNI_OK) {
+		LOG(" ntyCallJavaFuncParam failed %s\n", func);
+		return ;
+	}
+	jclass javaClass = (*env)->GetObjectClass(env, gJavaObj);
+	if (javaClass == NULL) {
+		LOG("Fail to find javaClass");
+		return ;
+	}
+	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, func, "(JJI)V");
+	if (javaCallback == NULL) {
+		LOG("Fail to find method %s", func);
+		return ;
+	}
+
+
+	(*env)->CallVoidMethod(env, gJavaObj, javaCallback, fromId, gId, length);
+	if((*gJavaVM)->DetachCurrentThread(gJavaVM) != JNI_OK) {
+		LOG("DetachCurrentThread %s", func);
+		return ;
+	}
+}
+
 void ntySendSuccess(int arg) {
 	LOG("Success\n");
 	ntyCallJavaFunction("onNativeSendSuccess", arg);
@@ -317,6 +363,10 @@ void ntyCommonReqResult(DEVID fromId, U8 *json, int length) {
 
 void ntyCommonAckResult(U8 *json, int length) {
 	ntyCallJavaFuncParam("ntyNativeCommonAckResult", json, length);
+}
+
+void ntyPacketRecvResult(DEVID fromId, DEVID gId, int length) {
+	ntyCallJavaFuncPacket("ntyNativePacketRecvResult", fromId, gId, length);
 }
 
 
@@ -377,7 +427,7 @@ void ntyDisconnect(int arg) {
 //11
 void ntyReconnected(int arg) {
 	LOG("ntyReconnected %d\n", arg);
-	ntyCallJavaFunction("onNativeReconnect", arg);
+	ntyCallJavaFunctionNoThread("onNativeReconnect", arg);
 }
 
 
@@ -397,6 +447,17 @@ void ntyDataRoute(DEVID fromId, U8 *json, int length) {
 	LOG(" ntyDataRoute:%s\n", json);
 
 	ntyCallJavaFuncParam("ntyNativeDataRoute", json, length);
+}
+
+//0
+jbyteArray Java_com_wbj_ndk_natty_client_NattyClient_ntyGetVersion(JNIEnv *env, jobject thiz) {
+	char *buffer = ntyProtoClientGetVersion();
+	int length = strlen(buffer);
+
+	jbyteArray rtnArr = (*env)->NewByteArray(env, length);
+	(*env)->SetByteArrayRegion(env, rtnArr, 0, length, (jbyte*)buffer);
+
+	return rtnArr;
 }
 
 //1
@@ -513,15 +574,20 @@ int Java_com_wbj_ndk_natty_client_NattyClient_ntyCommonReqClient(JNIEnv *env, jo
 }
 //10
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyDataRouteClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray json, int length) {
+	DEVID groupId = 0;
+	memcpy(&groupId, &gId, sizeof(DEVID));
 
 	jbyte *data = (*env)->GetByteArrayElements(env, json, 0);
-	return ntyDataRouteClient(gId, data, length);
+	return ntyDataRouteClient(groupId, data, length);
 }
 //11
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyVoiceDataReqClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray data, int length) {
+	DEVID groupId = 0;
+	memcpy(&groupId, &gId, sizeof(DEVID));
 	jbyte *bData = (*env)->GetByteArrayElements(env, data, 0);
 
-	return ntyVoiceDataReqClient(gId, bData, length);
+	LOG("groupId: %lld", groupId);
+	return ntyVoiceDataReqClient(groupId, bData, length);
 }
 
 
