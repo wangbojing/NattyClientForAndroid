@@ -497,16 +497,31 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyClientInitilize(JNIEnv *env, j
 }
 
 //5
-void Java_com_wbj_ndk_natty_client_NattyClient_ntyBindClient(JNIEnv *env, jobject thiz, jlong DevID) {
+void Java_com_wbj_ndk_natty_client_NattyClient_ntyBindClient(JNIEnv *env, jobject thiz, jlong DevID, jbyteArray json, int length) {
 
 	DEVID id = 0;
 	memcpy(&id, &DevID, sizeof(DEVID));
 
+	jbyte *bData = (*env)->GetByteArrayElements(env, json, 0);
+
 	LOG(" ntyBindClient : %lld ", id);
-	ntyBindClient(id);
+	ntyBindClient(id, bData, length);
+}
+//6
+int Java_com_wbj_ndk_natty_client_NattyClient_ntyBindConfirmReqClient(JNIEnv *env, jobject thiz, jlong proposerId, jlong devId, int msgId, jbyteArray json, int length) {
+
+	DEVID proposer = 0;
+	DEVID deviceId = 0;
+
+	memcpy(&proposer, &proposerId, sizeof(DEVID));
+	memcpy(&deviceId, &devId, sizeof(DEVID));
+
+	jbyte *bData = (*env)->GetByteArrayElements(env, json, 0);
+
+	return ntyBindConfirmReqClient(proposer, deviceId, msgId, bData, length);
 }
 
-//6
+//7
 void Java_com_wbj_ndk_natty_client_NattyClient_ntyUnBindClient(JNIEnv *env, jobject thiz, jlong DevID) {
 
 	DEVID id = 0;
@@ -516,7 +531,7 @@ void Java_com_wbj_ndk_natty_client_NattyClient_ntyUnBindClient(JNIEnv *env, jobj
 	ntyUnBindClient(id);
 }
 
-//7
+//8
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobject thiz) {
 	int status = 0;
 
@@ -557,14 +572,14 @@ int Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobj
 	LOG(" ntyStartupClient %d", status);
 	return status;
 }
-//8
+//9
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyShutdownClient(JNIEnv *env, jobject thiz) {
 
 	ntyShutdownClient();
 	
 	return 0;
 }
-//9
+//10
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyCommonReqClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray json, int length) {
 	DEVID groupId = 0;
 	memcpy(&groupId, &gId, sizeof(DEVID));
@@ -572,7 +587,7 @@ int Java_com_wbj_ndk_natty_client_NattyClient_ntyCommonReqClient(JNIEnv *env, jo
 	jbyte *data = (*env)->GetByteArrayElements(env, json, 0);
 	return ntyCommonReqClient(groupId, data, length);
 }
-//10
+//11
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyDataRouteClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray json, int length) {
 	DEVID groupId = 0;
 	memcpy(&groupId, &gId, sizeof(DEVID));
@@ -580,7 +595,7 @@ int Java_com_wbj_ndk_natty_client_NattyClient_ntyDataRouteClient(JNIEnv *env, jo
 	jbyte *data = (*env)->GetByteArrayElements(env, json, 0);
 	return ntyDataRouteClient(groupId, data, length);
 }
-//11
+//12
 int Java_com_wbj_ndk_natty_client_NattyClient_ntyVoiceDataReqClient(JNIEnv *env, jobject thiz, jlong gId, jbyteArray data, int length) {
 	DEVID groupId = 0;
 	memcpy(&groupId, &gId, sizeof(DEVID));
