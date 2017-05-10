@@ -62,8 +62,8 @@ LOCAL_SRC_FILES  := 	NattyClient-jni.c \
 		    	./ssl/openssl_sha1.c
 		    
 
+LOCAL_LDFLAGS 		+= -fuse-ld=bfd
 
-
-LOCAL_LDLIBS	 += -pthread -llog
+LOCAL_LDLIBS	 	+= -pthread -llog
 
 include $(BUILD_SHARED_LIBRARY)

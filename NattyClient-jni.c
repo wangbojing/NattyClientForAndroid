@@ -449,6 +449,12 @@ void ntyDataRoute(DEVID fromId, U8 *json, int length) {
 	ntyCallJavaFuncParam("ntyNativeDataRoute", json, length);
 }
 
+void ntyBindConfirmResult(DEVID fromId, U8 *json, int length) {
+	LOG(" ntyDataRoute:%s\n", json);
+
+	ntyCallJavaFuncReturn("ntyBindConfirmResult", fromId, json, length);
+}
+
 //0
 jbyteArray Java_com_wbj_ndk_natty_client_NattyClient_ntyGetVersion(JNIEnv *env, jobject thiz) {
 	char *buffer = ntyProtoClientGetVersion();
@@ -558,6 +564,8 @@ int Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobj
 
 	ntySetDataRoute(ntyDataRoute);
 	ntySetDataResult(ntyDataResult);
+	ntySetBindConfirmResult(ntyBindConfirmResult);
+	ntySetPacketRecv(ntyPacketRecvResult);
 
 	ntySetVoiceBroadCastResult(ntyVoiceBroadCastResult);
 	ntySetLocationBroadCastResult(ntyLocationBroadCastResult);
