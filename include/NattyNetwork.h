@@ -71,7 +71,6 @@ typedef long long C_DEVID;
 #define NORMAL_BUFFER_SIZE	128
 #define SENT_TIMEOUT	3
 
-
 #define DEBUG_WARNNING		0
 #define DEBUG_TRACE			1
 #define DEBUG_ERROR			2

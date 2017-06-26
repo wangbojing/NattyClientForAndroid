@@ -51,6 +51,7 @@
 #include <android/log.h>
 
 
+
 JavaVM *gJavaVM;
 jobject gJavaObj;
 
@@ -270,7 +271,8 @@ void ntyCallJavaFuncReturn(const char *func, DEVID fromId, U8 *json, int length)
 		LOG("Fail to find javaClass");
 		return ;
 	}
-	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, func, "(J[CI)V");
+
+	jmethodID javaCallback = (*env)->GetMethodID(env, javaClass, func, "(J[BI)V");
 	if (javaCallback == NULL) {
 		LOG("Fail to find method %s", func);
 		return ;
@@ -399,7 +401,7 @@ void ntyOfflineMsgAckResult(U8 *json, int length) {
 //6
 void ntyDataResult(U8 *json, int length) {
 	LOG(" ntyDataResult:%d\n", length);
-	ntyCallJavaFuncStatus("ntyNativeDataResult", length);
+	ntyCallJavaFuncParam("ntyNativeDataResult", json, length);
 }
 //7
 void ntyVoiceBroadCastResult(DEVID fromId, U8 *json, int length) {
@@ -453,6 +455,12 @@ void ntyBindConfirmResult(DEVID fromId, U8 *json, int length) {
 	LOG(" ntyDataRoute:%s\n", json);
 
 	ntyCallJavaFuncReturn("ntyBindConfirmResult", fromId, json, length);
+}
+
+void ntyMessagePush(DEVID fromId, U8 *json, int length) {
+	LOG(" ntyMessagePush:%s\n", json);
+
+	ntyCallJavaFuncReturn("ntyNativeMessagePush", fromId, json, length);
 }
 
 //0
@@ -570,6 +578,8 @@ int Java_com_wbj_ndk_natty_client_NattyClient_ntyStartupClient(JNIEnv *env, jobj
 	ntySetVoiceBroadCastResult(ntyVoiceBroadCastResult);
 	ntySetLocationBroadCastResult(ntyLocationBroadCastResult);
 	ntySetCommonBroadCastResult(ntyCommonBroadCastResult);
+
+	ntySetMessagePushResult(ntyMessagePush);
 
 
 	ntyStartupClient(&status);

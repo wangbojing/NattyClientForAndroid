@@ -70,8 +70,6 @@ static NWTimer *nBigBufferSendTimer = NULL;
 static NWTimer *nBigBufferRecvTimer = NULL;
 static NWTimer *nRunTimer = NULL;
 
-
-
 static int ntyHeartBeatCb (NITIMER_ID id, void *user_data, int len);
 
 static void ntySetupRecvProcThread(void *self);
@@ -102,7 +100,7 @@ typedef enum {
 
 #if 1 //local
 
-static char *sdk_version = "NattyAndroid V5.3";
+static char *sdk_version = "NattyAndroid V5.4 betaA";
 
 static C_DEVID gSelfId = 0;
 RECV_CALLBACK onRecvCallback = NULL;
@@ -132,6 +130,7 @@ NTY_PARAM_CALLBACK onDataResult = NULL; //RECV DATA_RESULT
 NTY_RETURN_CALLBACK onVoiceBroadCastResult = NULL; //RECV VOICE_BROADCAST
 NTY_RETURN_CALLBACK onLocationBroadCastResult = NULL; //RECV LOCATION_BROADCAST
 NTY_RETURN_CALLBACK onCommonBroadCastResult = NULL; //RECV COMMON_BROADCAST
+NTY_RETURN_CALLBACK onMessagePush = NULL; //RECV NTY_PROTO_MSG_PUSH_REQ
 NTY_RETURN_CALLBACK onBindConfirmResult = NULL;
 
 #if (NTY_PROTO_SELFTYPE==NTY_PROTO_CLIENT_IOS)
@@ -153,7 +152,7 @@ typedef struct _NATTYPROTOCOL {
 	C_DEVID fromId; //store ack devid
 #if (NTY_PROTO_SELFTYPE==NTY_PROTO_CLIENT_IOS)
 	U8 tokens[NORMAL_BUFFER_SIZE];
-	U8 tokenLen;
+	U16 tokenLen;
 	U8 publishStatus;
 #endif
 	void *friends;
@@ -190,6 +189,7 @@ typedef struct _NATTYPROTOCOL {
 	NTY_RETURN_CALLBACK onVoiceBroadCastResult; //RECV VOICE_BROADCAST
 	NTY_RETURN_CALLBACK onLocationBroadCastResult; //RECV LOCATION_BROADCAST
 	NTY_RETURN_CALLBACK onCommonBroadCastResult; //RECV COMMON_BROADCAST
+	NTY_RETURN_CALLBACK onMessagePush; //RECV NTY_PROTO_MSG_PUSH_REQ
 	NTY_RETURN_CALLBACK onBindConfirmResult; //RECV COMMON_BROADCAST
 #endif
 	pthread_t recvThreadId;
@@ -268,6 +268,7 @@ void* ntyProtoClientCtor(void *_self, va_list *params) {
 	proto->onVoiceBroadCastResult = onVoiceBroadCastResult; //RECV VOICE_BROADCAST
 	proto->onLocationBroadCastResult = onLocationBroadCastResult; //RECV LOCATION_BROADCAST
 	proto->onCommonBroadCastResult = onCommonBroadCastResult; //RECV COMMON_BROADCAST
+	proto->onMessagePush = onMessagePush;
 	proto->onBindConfirmResult = onBindConfirmResult;
 
 #if (NTY_PROTO_SELFTYPE==NTY_PROTO_CLIENT_IOS)
@@ -898,6 +899,10 @@ void ntySetCommonBroadCastResult(NTY_RETURN_CALLBACK cb) {
 	onCommonBroadCastResult = cb;
 }
 
+void ntySetMessagePushResult(NTY_RETURN_CALLBACK cb) {
+	onMessagePush = cb;
+}
+
 void ntySetBindConfirmResult(NTY_RETURN_CALLBACK cb) {
 	onBindConfirmResult = cb;
 }
@@ -1242,7 +1247,6 @@ int ntyAudioPacketEncode(U8 *pBuffer, int length) {
 	return pktLength;
 }
 
-
 int ntyGetRecvBigLength(void) {
 	return u32DataLength;
 }
@@ -1554,6 +1558,20 @@ void ntyPacketClassifier(void *arg, U8 *buf, int length) {
 			}
 			
 			break;
+		}
+		case NTY_PROTO_MSG_PUSH_REQ: {
+			C_DEVID fromId = 0;
+			U8 *json = NULL;
+			U16 u16Length = 0;
+
+			memcpy(&fromId, buf+NTY_PROTO_MSG_PUSH_DEVID_IDX, sizeof(C_DEVID));
+			memcpy(&u16Length, buf+NTY_PROTO_MSG_PUSH_JSON_LENGTH_IDX, sizeof(U16));
+
+			json = buf+NTY_PROTO_MSG_PUSH_JSON_CONTENT_IDX;
+
+			if (proto->onMessagePush) {
+				proto->onMessagePush(fromId, json, u16Length);
+			}
 		}
 #if (NTY_PROTO_SELFTYPE == NTY_PROTO_CLIENT_WATCH)		
 		case NTY_PROTO_LOCATION_PUSH: {
