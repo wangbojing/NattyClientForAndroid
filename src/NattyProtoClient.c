@@ -100,7 +100,7 @@ typedef enum {
 
 #if 1 //local
 
-static char *sdk_version = "NattyAndroid V5.4 betaA";
+static char *sdk_version = "NattyAndroid V5.5 betaB";
 
 static C_DEVID gSelfId = 0;
 RECV_CALLBACK onRecvCallback = NULL;
@@ -286,6 +286,7 @@ void* ntyProtoClientCtor(void *_self, va_list *params) {
 		proto->u8ConnectFlag = 1;
 	}
 	
+	LOG("Create HeartBeat Timer\n");
 	//Create Timer
 	void *nTimerList = ntyTimerInstance();
 	nHeartBeatTimer = ntyTimerAdd(nTimerList, HEARTBEAT_TIME_TICK, ntyHeartBeatCb, NULL, 0);
@@ -338,13 +339,14 @@ static int ntyHeartBeatCb (NITIMER_ID id, void *user_data, int len) {
 	bzero(buffer, NTY_HEARTBEAT_ACK_LENGTH);
 	
 	if (proto->selfId == 0) {//set devid
-		trace("[%s:%s:%d] selfId == 0\n", __FILE__, __func__, __LINE__);
+		LOG("[%s:%s:%d] selfId == 0\n", __FILE__, __func__, __LINE__);
 		return NTY_RESULT_FAILED;
 	} 
 	if (proto->u8ConnectFlag == 0) {
-		trace("[%s:%s:%d] socket don't connect to server\n", __FILE__, __func__, __LINE__);
+		LOG("[%s:%s:%d] socket don't connect to server\n", __FILE__, __func__, __LINE__);
 		return NTY_RESULT_FAILED;
 	}
+	LOG("ntyHeartBeatCb running\n");
 	
 	buffer[NTY_PROTO_VERSION_IDX] = NTY_PROTO_VERSION;	
 	buffer[NTY_PROTO_PROTOTYPE_IDX] = (U8) PROTO_REQ;	
@@ -412,7 +414,7 @@ int ntyProtoClientLogin(void *_self) {
 #endif
 		
 
-	trace(" ntyProtoClientLogin %d\n", __LINE__);
+	LOG(" ntyProtoClientLogin %d\n", __LINE__);
 	ClientSocket *nSocket = ntyNetworkInstance();
 	return ntySendFrame(nSocket, buffer, len);
 }
@@ -440,7 +442,7 @@ int ntyProtoClientBind(void *_self, C_DEVID did, U8 *json, U16 length) {
 #endif
 	
 
-	trace(" ntyProtoClientBind --> %d", did);
+	LOG(" ntyProtoClientBind --> %lld", did);
 
 	ClientSocket *nSocket = ntyNetworkInstance();
 	return ntySendFrame(nSocket, buf, len);
@@ -479,6 +481,8 @@ int ntyProtoClientHeartBeat(void *_self) {
 	//memcpy(buf+NTY_PROTO_UNBIND_DEVICEID_IDX, &did, sizeof(C_DEVID));
 	//*(C_DEVID*)(&buf[NTY_PROTO_UNBIND_DEVICEID_IDX]) = did;
 	len = NTY_PROTO_HEARTBEAT_REQ_CRC_IDX + sizeof(U32);
+
+	LOG("ntyProtoClientHeartBeat\n");
 
 	ClientSocket *nSocket = ntyNetworkInstance();
 	return ntySendFrame(nSocket, buf, len);
@@ -954,13 +958,13 @@ static int ntyReconnectCb(NITIMER_ID id, void *user_data, int len) {
 	
 	proto = ntyStartupClient(&status);
 	if (status != -1 && (proto != NULL)) {
-		trace(" ntyReconnectCb  Success... status:%d, flag:%d\n", status, proto->u8ConnectFlag);
+		LOG(" ntyReconnectCb  Success... status:%d, flag:%d\n", status, proto->u8ConnectFlag);
 		if (proto->u8ConnectFlag) { //Reconnect Success
 			if (proto->onProxyReconnect)
 				proto->onProxyReconnect(0);
 			//Stop Timer
 #if 1
-			trace(" Stop Timer\n");
+			LOG(" Stop Timer\n");
 			void *nTimerList = ntyTimerInstance();
 			ntyTimerDel(nTimerList, nReconnectTimer);
 			nReconnectTimer = NULL;
